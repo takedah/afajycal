@@ -1,0 +1,104 @@
+{% extends 'layout.html' %}
+{% block content %}
+<header>
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+    <div class="navbar-nav">
+      <a class="navbar-brand text-white-50" href="/" title="Back to home">AFA junior youth match schedules {{ this_year }}</a> 
+    </div>
+    <div class="navbar-nav mr-2">
+      <div class="dropdown show">
+        <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Team Name
+        </a>
+
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+          {% for val in all_team_names %}
+          <a class="dropdown-item" href="./find_all?team_name={{ val }}&category=All">{{ val }}</a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="navbar-nav mr-auto">
+      <div class="dropdown show">
+        <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Category
+        </a>
+
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+          {% for val in all_categories %}
+          <a class="dropdown-item" href="./find_all?team_name=All&category={{ val }}">{{ val }}</a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="navbar-nav">
+      <form class="form-inline" action="./find_all" method="GET">
+        <div>
+          <input class="form-control mr-sm-2" type="text" name="team_name" value="" placeholder="Enter team name">
+          <select class="form-control mr-sm-2" name="category">
+            <option selected>Choose category...</option>
+            {% for val in all_categories %}
+            <option value="{{ val }}">{{ val }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-primary my-2 my-sm-0">Search</button>
+        </div>
+      </form>
+    </div>
+  </nav>
+</header>
+<main>
+  <div class="container">
+    {% if 0 < results_number %}
+    <h1 class="h3">Search Results: {{ results_number }} matches ⚽</h1>
+    <div class="alert alert-success mt-4">
+      <p>
+        Team Name: <strong>{{ team_name }}</strong>
+        Category: <strong>{{ category }}</strong>
+      </p>
+      <hr>
+      <p>
+        Next Game: <strong>{{ next_game.home_team }} vs {{ next_game.away_team }} ({{ next_game.category }}) {{ next_game.kickoff_time[:16] }} Kickoff !</strong>
+      </p>
+    </div>
+    <h2 class="h4">match schedules are as follows:</h2>
+    <table class="table table-striped table-bordered table-hover">
+      <caption>Last Update: {{ last_update[:16] }}</caption>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Kickoff</th>
+          <th>Home</th>
+          <th>Away</th>
+          <th>Stadium</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in schedule %}
+        <tr>
+          <td>{{ row.category }}</td>
+          <td>{{ row.kickoff_time[:16] }}</td>
+          <td>{{ row.home_team }}</td>
+          <td>{{ row.away_team }}</td>
+          <td>{{ row.studium }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <h1 class="h3">Matches Not Found</h1>
+    <p class="alert alert-danger">
+      Team Name: <strong>{{ team_name }}</strong>
+      Category: <strong>{{ category }}</strong>
+    </p>
+    <p class="lead">not exists match schedules...</p>
+    {% endif %} 
+  </div>
+</main>
+<footer class="footer mt-auto text-center">
+  <div class="container">
+    <p>This site is created using data which is downloaded from <a href="http://afa11.com/asahijy/" title="旭川地区サッカー協会第3種事業委員会">Asahikawa Football Association Official Web site</a>.</p>
+    <p>Please refer to the official website for accurate information.</p>
+  </div>
+</footer>
+{% endblock %}
