@@ -14,9 +14,8 @@ setup(
     long_description=readme,
     author='Hiroki Takeda',
     author_email='takedahiroki@gmail.com',
-    install_requires=['requests', 'BeautifulSoup4', 'flask']
+    install_requires=['requests', 'BeautifulSoup4', 'flask'],
     url='https://github.com/takedah/aoscjycal',
     license=license,
     packages=find_packages(exclude=('tests', 'docs'))
 )
-

@@ -119,9 +119,9 @@ class MatchScheduleAction:
         number_of_matches = 0
         try:
             cur.execute(
-                    "SELECT COUNT(*) FROM match_schedule "
-                    + "WHERE home_team=? OR away_team=?",
-                    (team_name, team_name))
+                "SELECT COUNT(*) FROM match_schedule "
+                + "WHERE home_team=? OR away_team=?",
+                (team_name, team_name))
             row = cur.fetchone()
             db.close()
             number_of_matches = row[0]
@@ -228,9 +228,10 @@ class MatchScheduleAction:
             if category == '' or category == 'All':
                 category = '%'
             else:
-                category = '%' + category +'%'
+                category = '%' + category + '%'
 
-            search_condition = "WHERE (home_team LIKE ? OR away_team LIKE ?) " + "AND category LIKE ?"
+            search_condition = "WHERE (home_team LIKE ? OR away_team " + \
+                "LIKE ?)" + " AND category LIKE ?"
             cur.execute(
                 "SELECT id,number,category,match_number,"
                 + "match_date, kickoff_time,"
@@ -240,8 +241,8 @@ class MatchScheduleAction:
                 (team_name, team_name, category))
             rows = cur.fetchall()
             cur.execute(
-                    "SELECT COUNT(*) FROM match_schedule"
-                    + " " + search_condition +";",
+                "SELECT COUNT(*) FROM match_schedule"
+                + " " + search_condition + ";",
                 (team_name, team_name, category))
             row = cur.fetchone()
             db.close()
@@ -290,7 +291,7 @@ class MatchScheduleAction:
             if category == '' or category == 'All':
                 category = '%'
             else:
-                category = '%' + category +'%'
+                category = '%' + category + '%'
 
             cur.execute(
                 "SELECT id,number,category,match_number,"
@@ -320,7 +321,7 @@ class MatchScheduleAction:
     def get_last_update_time(self):
         """
         get last update time of 'match_schedule' table.
-        
+
         Returns
         -------
         last_update_time : datetime
@@ -332,7 +333,7 @@ class MatchScheduleAction:
         try:
             cur.execute(
                 "SELECT max(updated),updated FROM match_schedule;"
-                )
+            )
             row = cur.fetchone()
             db.close()
             if row is None:
@@ -341,7 +342,7 @@ class MatchScheduleAction:
                 results = row[0]
 
             return results
-        
+
         except sqlite3.Error as e:
             db.close()
             print('database error: ', e)

@@ -1,9 +1,3 @@
-import sqlite3
-from datetime import datetime, timedelta, timezone
-from afajycal.config import Config
-from afajycal.db import DB
-
-
 class MatchSchedule:
     """
     AFA junior youth soccer match schedule.
