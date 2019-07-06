@@ -1,5 +1,5 @@
 import urllib.parse
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 
 class MatchSchedule:
@@ -47,18 +47,20 @@ class MatchSchedule:
         """
         title = self.category + ' (' + self.home_team + ' vs ' \
             + self.away_team + ')'
-        start_date = self.kickoff_time
+        start_date = datetime.strptime(
+                self.kickoff_time[:19] + '+0900', '%Y-%m-%d %H:%M:%S%z')
+        start_date = start_date.astimezone(timezone.utc)
         if self.category == 'サテライト':
             game_time = 60
         else:
             game_time = 90
 
-        end_date = self.kickoff_time + timedelta(minutes=game_time)
-        start = start_date.strftime('%Y-%m-%dT%H:%M:%S%z')
-        end = end_date.strftime('%Y-%m-%dT%H:%M:%S%z')
+        end_date = start_date + timedelta(minutes=game_time)
+        start_date_str = start_date.strftime('%Y%m%dT%H%M%SZ')
+        end_date_str = end_date.strftime('%Y%m%dT%H%M%SZ')
         link = 'https://www.google.com/calendar/event?' \
             + 'action=' + 'TEMPLATE' \
             + '&text=' + urllib.parse.quote(title) \
             + '&location=' + urllib.parse.quote(self.studium) \
-            + '&dates=' + start + '/' + end
+            + '&dates=' + start_date_str + '/' + end_date_str
         return link

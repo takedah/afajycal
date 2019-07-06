@@ -71,6 +71,7 @@
           <th>Home</th>
           <th>Away</th>
           <th>Stadium</th>
+          <th>Other</th>
         </tr>
       </thead>
       <tbody>
@@ -81,6 +82,7 @@
           <td>{{ row.home_team }}</td>
           <td>{{ row.away_team }}</td>
           <td>{{ row.studium }}</td>
+          <td><a href="{{ row.google_calendar_link() }}" title="googleカレンダーに登録">add to google calendar</a></td>
         </tr>
         {% endfor %}
       </tbody>
