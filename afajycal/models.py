@@ -16,8 +16,8 @@ class MatchSchedule:
         serial number by division
     match_date : date
         match date
-    kickoff_time : datetime
-        match kickoff time
+    kickoff_time : str
+        match kickoff datetime
     home_team : str
         home team name
     away_team : str

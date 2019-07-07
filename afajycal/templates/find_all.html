@@ -12,8 +12,8 @@
         </a>
 
         <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-          {% for val in all_team_names %}
-          <a class="dropdown-item" href="./find_all?team_name={{ val }}&category=All">{{ val }}</a>
+          {% for row in team_names_and_match_number %}
+          <a class="dropdown-item" href="./find_all?team_name={{ row[0] }}&category=All">{{ row[1] }} ({{ row[2]}})</a>
           {% endfor %}
         </div>
       </div>
@@ -25,8 +25,8 @@
         </a>
 
         <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-          {% for val in all_categories %}
-          <a class="dropdown-item" href="./find_all?team_name=All&category={{ val }}">{{ val }}</a>
+          {% for row in categories %}
+          <a class="dropdown-item" href="./find_all?team_name=All&category={{ row[0] }}">{{ row[1] }}</a>
           {% endfor %}
         </div>
       </div>
@@ -37,8 +37,8 @@
           <input class="form-control mr-sm-2" type="text" name="team_name" value="" placeholder="Enter team name">
           <select class="form-control mr-sm-2" name="category">
             <option selected>Choose category...</option>
-            {% for val in all_categories %}
-            <option value="{{ val }}">{{ val }}</option>
+            {% for row in categories %}
+            <option value="{{ row[1] }}">{{ row[1] }}</option>
             {% endfor %}
           </select>
           <button type="submit" class="btn btn-primary my-2 my-sm-0">Search</button>
@@ -71,7 +71,7 @@
           <th>Home</th>
           <th>Away</th>
           <th>Stadium</th>
-          <th>Other</th>
+          <th>Google Calendar</th>
         </tr>
       </thead>
       <tbody>
@@ -82,7 +82,7 @@
           <td>{{ row.home_team }}</td>
           <td>{{ row.away_team }}</td>
           <td>{{ row.studium }}</td>
-          <td><a href="{{ row.google_calendar_link() }}" title="googleカレンダーに登録">add to google calendar</a></td>
+          <td><a href="{{ row.google_calendar_link() }}" title="googleカレンダーに登録">add</a></td>
         </tr>
         {% endfor %}
       </tbody>

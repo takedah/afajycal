@@ -1,3 +1,4 @@
+import urllib.parse
 from datetime import datetime, timedelta, timezone
 from flask import Flask, render_template, escape, request
 from afajycal.config import Config
@@ -6,6 +7,31 @@ from afajycal.action import MatchScheduleAction
 
 web = Flask(__name__)
 this_year = str(Config.THIS_YEAR)
+
+
+def team_names_and_match_number():
+    tmp = list()
+    for team_name in MatchScheduleAction.get_team_names():
+        tmp.append([
+            urllib.parse.quote(team_name),
+            team_name,
+            MatchScheduleAction.get_number_of_matches(team_name)
+            ])
+
+    return tmp
+
+
+def categories():
+    categories = MatchScheduleAction.get_categories()
+    categories.insert(0, "All")
+    tmp = list()
+    for category in categories:
+        tmp.append([
+            urllib.parse.quote(category),
+            category
+            ])
+
+    return tmp
 
 
 @web.after_request
@@ -23,20 +49,12 @@ def add_security_headers(response):
 
 @web.route('/')
 def index():
-    tmp = MatchScheduleAction.get_team_names()
-    all_team_names = list()
-    for team_name in tmp:
-        all_team_names.append(
-            [team_name, MatchScheduleAction.get_number_of_matches(team_name)])
-
-    all_categories = MatchScheduleAction.get_categories()
-    all_categories.insert(0, "All")
     last_update = MatchScheduleAction.get_last_update_time()
     title = 'AFA junior youth match schedules'
     return render_template(
         'index.html', title=title, this_year=this_year,
-        all_team_names=all_team_names, all_categories=all_categories,
-        last_update=last_update)
+        team_names_and_match_number=team_names_and_match_number(),
+        categories=categories(), last_update=last_update)
 
 
 @web.route('/find_all')
@@ -51,9 +69,6 @@ def find_all():
 
     JST = timezone(timedelta(hours=+9), 'JST')
     time_now = datetime.now(JST)
-    all_categories = MatchScheduleAction.get_categories()
-    all_categories.insert(0, "All")
-    all_team_names = MatchScheduleAction.get_team_names()
     res = MatchScheduleAction.find_all(team_name, category)
     schedule = res[0]
     results_number = res[1]
@@ -62,9 +77,10 @@ def find_all():
     title = 'Search results of ' + '"' + team_name + \
         '"' + ' "' + category + '"' + ' match schedules'
     return render_template(
-        'find_all.html', title=title, this_year=this_year, team_name=team_name,
-        category=category, all_team_names=all_team_names,
-        all_categories=all_categories, schedule=schedule,
+        'find_all.html', title=title, this_year=this_year,
+        team_name=team_name, category=category,
+        team_names_and_match_number=team_names_and_match_number(),
+        categories=categories(), schedule=schedule,
         results_number=results_number, next_game=next_game,
         last_update=last_update)
 
