@@ -58,12 +58,12 @@
       </p>
       <hr>
       <p>
-        Next Game: <strong>{{ next_game.home_team }} vs {{ next_game.away_team }} ({{ next_game.category }}) {{ next_game.kickoff_time[:16] }} Kickoff !</strong>
+        Next Game: <strong>{{ next_game.home_team }} vs {{ next_game.away_team }} ({{ next_game.category }}) {{ next_game.kickoff() }} Kickoff !</strong>
       </p>
     </div>
     <h2 class="h4">match schedules are as follows:</h2>
     <table class="table table-striped table-bordered table-hover">
-      <caption>Last Update: {{ last_update[:16] }}</caption>
+      <caption>Last Update: {{ last_update }}</caption>
       <thead>
         <tr>
           <th>Category</th>
@@ -78,7 +78,7 @@
         {% for row in schedule %}
         <tr>
           <td>{{ row.category }}</td>
-          <td>{{ row.kickoff_time[:16] }}</td>
+          <td>{{ row.kickoff() }}</td>
           <td>{{ row.home_team }}</td>
           <td>{{ row.away_team }}</td>
           <td>{{ row.studium }}</td>

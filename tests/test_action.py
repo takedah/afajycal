@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime, date, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 from afajycal.action import MatchScheduleAction
 
@@ -12,7 +12,6 @@ class TestMatchScheduleAction(unittest.TestCase):
             'number': 480,
             'category': 'サテライト',
             'match_number': 'ST61',
-            'match_date': date(self.year, 6, 2),
             'kickoff_time': datetime(
                 self.year, 6, 2, 14, 0, tzinfo=self.JST),
             'home_team': '六合',
@@ -21,21 +20,19 @@ class TestMatchScheduleAction(unittest.TestCase):
                 'number': 469,
                 'category': 'サテライト',
                 'match_number': 'ST50',
-                'match_date': date(self.year, 6, 8),
                 'kickoff_time': datetime(
                     self.year, 6, 8, 14, 0, tzinfo=self.JST),
                 'home_team': '永山南',
                 'away_team': '六合',
                 'studium': '花咲球技場'}, {
-                'number': 480,
-                'category': 'test',
-                'match_number': 'test',
-                'match_date': date(self.year, 1, 1),
-                'kickoff_time': datetime(
-                    self.year, 1, 1, 0, 0, tzinfo=self.JST),
-                'home_team': 'test',
-                'away_team': 'test',
-                'studium': 'test'}]
+                    'number': 480,
+                    'category': 'test',
+                    'match_number': 'test',
+                    'kickoff_time': datetime(
+                        self.year, 1, 1, 0, 0, tzinfo=self.JST),
+                    'home_team': 'test',
+                    'away_team': 'test',
+                    'studium': 'test'}]
 
     @patch('afajycal.action.Scraper.get_schedule_list')
     @patch('afajycal.action.Config')
@@ -66,7 +63,9 @@ class TestMatchScheduleAction(unittest.TestCase):
         self.assertEqual(result, expect)
 
     def test_trim_team_name(self):
-        self.assertEqual(MatchScheduleAction._trim_team_name('旭川市立六合中学校'), '六合')
+        self.assertEqual(
+            MatchScheduleAction._trim_team_name('旭川市立六合中学校'),
+            '六合')
 
     @patch('afajycal.action.Config')
     def test_find_all(self, config_mock):
@@ -76,10 +75,14 @@ class TestMatchScheduleAction(unittest.TestCase):
         number = res[1]
         self.assertEqual(schedule[0].away_team, '中富良野')
         self.assertEqual(schedule[0].studium, '花咲球技場')
-        self.assertEqual(schedule[0].kickoff_time, '2019-06-02 14:00:00+09:00')
+        self.assertEqual(
+            schedule[0].kickoff_time,
+            datetime(2019, 6, 2, 14, 0, tzinfo=self.JST))
         self.assertEqual(schedule[1].home_team, '永山南')
         self.assertEqual(schedule[1].studium, '花咲球技場')
-        self.assertEqual(schedule[1].kickoff_time, '2019-06-08 14:00:00+09:00')
+        self.assertEqual(
+            schedule[1].kickoff_time,
+            datetime(2019, 6, 8, 14, 0, tzinfo=self.JST))
         self.assertEqual(number, 2)
 
     @patch('afajycal.action.Config')
@@ -89,14 +92,20 @@ class TestMatchScheduleAction(unittest.TestCase):
             '六合', 'サテライト', '2019-06-02 13:00:00')
         self.assertEqual(schedule.away_team, '中富良野')
         self.assertEqual(schedule.studium, '花咲球技場')
-        self.assertEqual(schedule.kickoff_time, '2019-06-02 14:00:00+09:00')
+        self.assertEqual(
+            schedule.kickoff_time,
+            datetime(2019, 6, 2, 14, 0, tzinfo=self.JST))
         schedule = MatchScheduleAction.find_latest(
-            '六合', 'サテライト', '2019-06-02 15:00:00')
+            '六合', 'サテライト',
+            datetime(2019, 6, 2, 15, 0, tzinfo=self.JST))
         self.assertEqual(schedule.home_team, '永山南')
         self.assertEqual(schedule.studium, '花咲球技場')
-        self.assertEqual(schedule.kickoff_time, '2019-06-08 14:00:00+09:00')
+        self.assertEqual(
+            schedule.kickoff_time,
+            datetime(2019, 6, 8, 14, 0, tzinfo=self.JST))
         schedule = MatchScheduleAction.find_latest(
-            '六合', 'サテライト', '2019-09-18 09:00:00')
+            '六合', 'サテライト',
+            datetime(2019, 9, 18, 9, 0, tzinfo=self.JST))
         self.assertIsNone(schedule)
 
 

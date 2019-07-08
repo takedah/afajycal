@@ -27,7 +27,7 @@ class MatchScheduleAction:
         scraper = Scraper()
         try:
             # clear current table.
-            cur.execute('DELETE FROM match_schedule')
+            cur.execute('DELETE FROM match_schedules')
             values = list()
             now_time = datetime.now(timezone(timedelta(hours=+9), 'JST'))
             match_list = scraper.get_schedule_list()
@@ -37,7 +37,6 @@ class MatchScheduleAction:
                     row['number'],
                     row['category'],
                     row['match_number'],
-                    row['match_date'],
                     row['kickoff_time'],
                     row['home_team'],
                     row['away_team'],
@@ -46,10 +45,10 @@ class MatchScheduleAction:
                 values.append(tmp)
 
             cur.executemany(
-                'INSERT OR IGNORE INTO match_schedule ('
-                + 'number, category, match_number, match_date, '
+                'INSERT OR IGNORE INTO match_schedules ('
+                + 'number, category, match_number, '
                 + 'kickoff_time, home_team, away_team, studium, '
-                + 'updated) VALUES (?,?,?,?,?,?,?,?,?);',
+                + 'updated) VALUES (?,?,?,?,?,?,?,?);',
                 values)
             db.commit()
             db.close()
@@ -76,9 +75,9 @@ class MatchScheduleAction:
         cur = db.cursor()
         team_names = list()
         try:
-            cur.execute("SELECT home_team FROM match_schedule")
+            cur.execute("SELECT home_team FROM match_schedules")
             home_team_rows = cur.fetchall()
-            cur.execute("SELECT away_team FROM match_schedule")
+            cur.execute("SELECT away_team FROM match_schedules")
             away_team_rows = cur.fetchall()
             db.close()
             for row in home_team_rows:
@@ -119,7 +118,7 @@ class MatchScheduleAction:
         number_of_matches = 0
         try:
             cur.execute(
-                "SELECT COUNT(*) FROM match_schedule "
+                "SELECT COUNT(*) FROM match_schedules "
                 + "WHERE home_team=? OR away_team=?",
                 (team_name, team_name))
             row = cur.fetchone()
@@ -146,7 +145,7 @@ class MatchScheduleAction:
         cur = db.cursor()
         categories = list()
         try:
-            cur.execute("SELECT DISTINCT category FROM match_schedule")
+            cur.execute("SELECT DISTINCT category FROM match_schedules")
             rows = cur.fetchall()
             db.close()
             for r in rows:
@@ -230,18 +229,20 @@ class MatchScheduleAction:
             else:
                 category = '%' + category + '%'
 
-            search_condition = "WHERE (home_team LIKE ? OR away_team " + \
-                "LIKE ?)" + " AND category LIKE ?"
+            search_condition = "WHERE" + " " \
+                + "(home_team LIKE ? OR away_team LIKE ?)" + " " \
+                + "AND category LIKE ?"
             cur.execute(
-                "SELECT id,number,category,match_number,"
-                + "match_date, kickoff_time,"
-                + "home_team,away_team,studium,updated FROM match_schedule"
-                + " " + search_condition + " "
+                "SELECT" + " "
+                + "id,number,category,match_number,kickoff_time,"
+                + "home_team,away_team,studium,updated" + " "
+                + "FROM match_schedules" + " "
+                + search_condition + " "
                 + "ORDER BY kickoff_time;",
                 (team_name, team_name, category))
             rows = cur.fetchall()
             cur.execute(
-                "SELECT COUNT(*) FROM match_schedule"
+                "SELECT COUNT(*) FROM match_schedules"
                 + " " + search_condition + ";",
                 (team_name, team_name, category))
             row = cur.fetchone()
@@ -268,9 +269,8 @@ class MatchScheduleAction:
             target team name.
         category : str
             target match division.
-        date_time : str
-            string of date which is expressed in the
-            %Y-%m-%d %H:%M:%S format.
+        date_time : datetime
+            base datetime.
 
         Returns
         -------
@@ -294,10 +294,11 @@ class MatchScheduleAction:
                 category = '%' + category + '%'
 
             cur.execute(
-                "SELECT id,number,category,match_number,"
-                + "match_date, kickoff_time,"
-                + "home_team,away_team,studium,updated FROM match_schedule "
-                + "WHERE (home_team LIKE ? OR away_team LIKE ?) "
+                "SELECT" + " "
+                + "id,number,category,match_number,kickoff_time,"
+                + "home_team,away_team,studium,updated" + " "
+                + "FROM match_schedules" + " "
+                + "WHERE (home_team LIKE ? OR away_team LIKE ?)" + " "
                 + "AND category LIKE ?"
                 + "AND kickoff_time > ? "
                 + "ORDER BY kickoff_time "
@@ -318,13 +319,13 @@ class MatchScheduleAction:
             return None
 
     @classmethod
-    def get_last_update_time(self):
+    def get_last_update(self):
         """
-        get last update time of 'match_schedule' table.
+        get last update time of 'match_schedules' table.
 
         Returns
         -------
-        last_update_time : datetime
+        last_update : str
           value of newest 'update' column.
 
         """
@@ -332,16 +333,15 @@ class MatchScheduleAction:
         cur = db.cursor()
         try:
             cur.execute(
-                "SELECT max(updated),updated FROM match_schedule;"
+                "SELECT max(updated),updated FROM match_schedules;"
             )
             row = cur.fetchone()
             db.close()
-            if row is None:
-                results = None
+            if row[0] is None:
+                return ''
             else:
-                results = row[0]
-
-            return results
+                last_update = MatchSchedule.get_datetime(row[0])
+                return datetime.strftime(last_update, '%Y/%m/%d %H:%M JST')
 
         except sqlite3.Error as e:
             db.close()

@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime, date, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock, MagicMock, patch
 from requests import Timeout, HTTPError
 from afajycal.scraper import Scraper, HTMLDownloadError
@@ -138,7 +138,6 @@ class TestScraper(unittest.TestCase):
             'number': 480,
             'category': 'サテライト',
             'match_number': 'ST61',
-            'match_date': date(self.year, 6, 2),
             'kickoff_time': datetime(
                 self.year, 6, 2, 14, 0, tzinfo=self.JST),
             'home_team': '六合',
@@ -147,7 +146,6 @@ class TestScraper(unittest.TestCase):
                 'number': 469,
                 'category': 'サテライト',
                 'match_number': 'ST50',
-                'match_date': date(self.year, 6, 8),
                 'kickoff_time': datetime(
                     self.year, 6, 8, 14, 0, tzinfo=self.JST),
                 'home_team': '永山南',

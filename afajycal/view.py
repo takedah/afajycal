@@ -49,7 +49,7 @@ def add_security_headers(response):
 
 @web.route('/')
 def index():
-    last_update = MatchScheduleAction.get_last_update_time()
+    last_update = MatchScheduleAction.get_last_update()
     title = 'AFA junior youth match schedules'
     return render_template(
         'index.html', title=title, this_year=this_year,
@@ -73,7 +73,7 @@ def find_all():
     schedule = res[0]
     results_number = res[1]
     next_game = MatchScheduleAction.find_latest(team_name, category, time_now)
-    last_update = MatchScheduleAction.get_last_update_time()
+    last_update = MatchScheduleAction.get_last_update()
     title = 'Search results of ' + '"' + team_name + \
         '"' + ' "' + category + '"' + ' match schedules'
     return render_template(
