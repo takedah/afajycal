@@ -11,6 +11,7 @@ This web application is composed of Flask web application framework.
 
 ## Requirement
 
+- SQLite3
 - requests
 - BeautifulSoup4
 - flask
@@ -21,7 +22,7 @@ This web application is composed of Flask web application framework.
 $ make
 $ python
 >>> from afajycal.action import MatchScheduleAction
-  >>> MatchScheduleAction.create
+  >>> MatchScheduleAction.create()
 >>> quit()
   ```
 
