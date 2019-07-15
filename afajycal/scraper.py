@@ -23,7 +23,7 @@ class Scraper:
         対象年度。
     JST : timezone
         日本時間のtimezoneオブジェクト。
-    
+
     """
 
     def __init__(self):
@@ -39,7 +39,7 @@ class Scraper:
         -------
         html_content : bytes
             HTMLコンテンツ。ダウンロードに失敗したらNoneを返す。
-        
+
         """
         try:
             response = requests.get(self.afa_url)
@@ -105,7 +105,7 @@ class Scraper:
         -------
         month : int
             数値。月を表すのに適切ではない数値だった場合、1を返す。
-        
+
         """
         month = 0
         if re.search(r'^[0-9]{1,2}$', month_str):
@@ -131,7 +131,7 @@ class Scraper:
         -------
         day : int
             数値。
-        
+
         """
         day = 0
         if re.search(r'^[0-9]{1,2}$', day_str):
@@ -158,7 +158,7 @@ class Scraper:
         time : list
             時間・分を数値で格納した配列。時間・分を表すのに適切ではない
             数値だった場合、配列のそれぞれの値は0とする。
-        
+
         """
         time = list()
         if re.search(r'^[0-9]{1,2}:[0-9]{2}$', time_str):
@@ -192,7 +192,7 @@ class Scraper:
         -------
         valid_year : int
             補正後の年。
-        
+
         """
         if 3 < month:
             valid_year = year
@@ -223,14 +223,14 @@ class Scraper:
             time = self._get_time(item[9])
             year = self._get_valid_year(month, self.this_year)
             tmp = {
-                    'number': int(item[0]),
-                    'category': item[1],
-                    'match_number': item[3],
-                    'kickoff_time': datetime(
-                        year, month, day, time[0], time[1], tzinfo=self.JST),
-                    'home_team': item[10].replace('\u3000', ''),
-                    'away_team': item[12].replace('\u3000', ''),
-                    'studium': item[8]}
+                'number': int(item[0]),
+                'category': item[1],
+                'match_number': item[3],
+                'kickoff_time': datetime(
+                    year, month, day, time[0], time[1], tzinfo=self.JST),
+                'home_team': item[10].replace('\u3000', ''),
+                'away_team': item[12].replace('\u3000', ''),
+                'studium': item[8]}
             schedule_list.append(tmp)
 
         return schedule_list

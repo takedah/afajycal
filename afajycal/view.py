@@ -10,13 +10,15 @@ this_year = str(Config.THIS_YEAR)
 
 
 def team_names_and_match_number():
+    JST = timezone(timedelta(hours=+9), 'JST')
+    time_now = datetime.now(JST)
     tmp = list()
     for team_name in MatchScheduleAction.get_team_names():
         tmp.append([
             urllib.parse.quote(team_name),
             team_name,
-            MatchScheduleAction.get_number_of_matches(team_name)
-            ])
+            MatchScheduleAction.get_number_of_matches(team_name, time_now)
+        ])
 
     return tmp
 
@@ -29,7 +31,7 @@ def categories():
         tmp.append([
             urllib.parse.quote(category),
             category
-            ])
+        ])
 
     return tmp
 
@@ -57,8 +59,8 @@ def index():
         categories=categories(), last_update=last_update)
 
 
-@web.route('/find_all')
-def find_all():
+@web.route('/find')
+def find():
     category = escape(request.args.get('category'))
     if category == '' or category == 'カテゴリを選択':
         category = '全て'
@@ -69,20 +71,18 @@ def find_all():
 
     JST = timezone(timedelta(hours=+9), 'JST')
     time_now = datetime.now(JST)
-    res = MatchScheduleAction.find_all(team_name, category)
+    res = MatchScheduleAction.find(team_name, category, time_now)
     schedule = res[0]
     results_number = res[1]
-    next_game = MatchScheduleAction.find_latest(team_name, category, time_now)
     last_update = MatchScheduleAction.get_last_update()
-    title = 'Search results of ' + '"' + team_name + \
-        '"' + ' "' + category + '"' + ' match schedules'
+    title = '"' + team_name + '"' + ' ' + '"' + category + '"' \
+            + ' ' + 'の試合スケジュール検索結果'
     return render_template(
-        'find_all.html', title=title, this_year=this_year,
+        'find.html', title=title, this_year=this_year,
         team_name=team_name, category=category,
         team_names_and_match_number=team_names_and_match_number(),
         categories=categories(), schedule=schedule,
-        results_number=results_number, next_game=next_game,
-        last_update=last_update)
+        results_number=results_number, last_update=last_update)
 
 
 if __name__ == '__main__':

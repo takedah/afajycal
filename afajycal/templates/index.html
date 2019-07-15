@@ -15,10 +15,10 @@
     </div>
     <ul class="list-inline mb-5">
       {% for row in team_names_and_match_number %}
-      <li class="list-inline-item mr-2 mb-2"><a class="btn btn-sm btn-secondary" href="./find_all?team_name={{ row[0] }}&category=">{{ row[1] }} ({{ row[2] }})</a></li>
+      <li class="list-inline-item mr-2 mb-2"><a class="btn btn-sm btn-secondary" href="./find?team_name={{ row[0] }}&category=">{{ row[1] }} ({{ row[2] }})</a></li>
       {% endfor %}
     </ul>
-    <form class="form mb-5" action="./find_all" method="GET">
+    <form class="form mb-5" action="./find" method="GET">
       <div class="form-group">
         <label class="h5 text-secondary" for="team_name">チーム名を入力</label>
         <input class="form-control form-control-lg" type="text" name="team_name" value="" placeholder="（例）六合">

@@ -22,8 +22,9 @@ class MatchSchedule:
         アウェイチーム名。
     studium : str
         試合会場。
-    
+
     """
+
     def __init__(self, **kwargs):
         self.number = kwargs['number']
         self.category = kwargs['category']
@@ -53,8 +54,8 @@ class MatchSchedule:
         base_datetime = datetime_str[:19]
         time_difference = datetime_str[-6:].replace(':', '')
         return datetime.strptime(
-                base_datetime + time_difference,
-                '%Y-%m-%d %H:%M:%S%z')
+            base_datetime + time_difference,
+            '%Y-%m-%d %H:%M:%S%z')
 
     def kickoff(self):
         """

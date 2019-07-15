@@ -53,7 +53,9 @@ class TestMatchScheduleAction(unittest.TestCase):
     @patch('afajycal.action.Config')
     def test_get_number_of_matches(self, config_mock):
         config_mock.DATABASE = 'tests/afajycal_test.db'
-        self.assertEqual(MatchScheduleAction.get_number_of_matches('六合'), 2)
+        self.assertEqual(
+                MatchScheduleAction.get_number_of_matches(
+                    '六合', datetime(2019, 6, 2, 13, 0, tzinfo=self.JST)), 2)
 
     @patch('afajycal.action.Config')
     def test_get_categories(self, config_mock):
@@ -68,9 +70,11 @@ class TestMatchScheduleAction(unittest.TestCase):
             '六合')
 
     @patch('afajycal.action.Config')
-    def test_find_all(self, config_mock):
+    def test_find(self, config_mock):
         config_mock.DATABASE = 'tests/afajycal_test.db'
-        res = MatchScheduleAction.find_all('六合', 'サテライト')
+        res = MatchScheduleAction.find(
+                '六合', 'サテライト',
+                datetime(2019, 6, 2, 13, 0, tzinfo=self.JST))
         schedule = res[0]
         number = res[1]
         self.assertEqual(schedule[0].away_team, '中富良野')
@@ -84,29 +88,13 @@ class TestMatchScheduleAction(unittest.TestCase):
             schedule[1].kickoff_time,
             datetime(2019, 6, 8, 14, 0, tzinfo=self.JST))
         self.assertEqual(number, 2)
-
-    @patch('afajycal.action.Config')
-    def test_find_latest(self, config_mock):
-        config_mock.DATABASE = 'tests/afajycal_test.db'
-        schedule = MatchScheduleAction.find_latest(
-            '六合', 'サテライト', '2019-06-02 13:00:00')
-        self.assertEqual(schedule.away_team, '中富良野')
-        self.assertEqual(schedule.studium, '花咲球技場')
-        self.assertEqual(
-            schedule.kickoff_time,
-            datetime(2019, 6, 2, 14, 0, tzinfo=self.JST))
-        schedule = MatchScheduleAction.find_latest(
-            '六合', 'サテライト',
-            datetime(2019, 6, 2, 15, 0, tzinfo=self.JST))
-        self.assertEqual(schedule.home_team, '永山南')
-        self.assertEqual(schedule.studium, '花咲球技場')
-        self.assertEqual(
-            schedule.kickoff_time,
-            datetime(2019, 6, 8, 14, 0, tzinfo=self.JST))
-        schedule = MatchScheduleAction.find_latest(
+        res = MatchScheduleAction.find(
             '六合', 'サテライト',
             datetime(2019, 9, 18, 9, 0, tzinfo=self.JST))
-        self.assertIsNone(schedule)
+        schedule = res[0]
+        number = res[1]
+        self.assertEqual(schedule, [])
+        self.assertEqual(number, 0)
 
 
 if __name__ == '__main__':

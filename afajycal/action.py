@@ -7,6 +7,10 @@ from afajycal.scraper import Scraper
 from afajycal.models import MatchSchedule
 
 
+class DatabaseActionError(Exception):
+    pass
+
+
 class MatchScheduleAction:
     """
     旭川地区サッカー協会第3種事業委員会Webサイトから試合スケジュールを取得する。
@@ -57,10 +61,9 @@ class MatchScheduleAction:
             print('schedules data imported successfully.')
             return True
 
-        except sqlite3.Error as e:
+        except sqlite3.Error:
             db.close()
-            print('database error: ', e)
-            return False
+            raise DatabaseActionError
 
     @classmethod
     def get_team_names(self):
@@ -93,13 +96,12 @@ class MatchScheduleAction:
             team_names = sorted(set(team_names), key=team_names.index)
             return team_names
 
-        except sqlite3.Error as e:
+        except sqlite3.Error:
             db.close()
-            print('database error: ', e)
-            return team_names
+            raise DatabaseActionError
 
     @classmethod
-    def get_number_of_matches(self, team_name):
+    def get_number_of_matches(self, team_name, date_time):
         """
         対象チームの試合数を返す。
 
@@ -112,6 +114,8 @@ class MatchScheduleAction:
         -------
         number_of_matches : int
             対象のチームの試合数。
+        date_time : datetime
+            基準の日時。
 
         """
 
@@ -120,18 +124,18 @@ class MatchScheduleAction:
         number_of_matches = 0
         try:
             cur.execute(
-                "SELECT COUNT(*) FROM match_schedules "
-                + "WHERE home_team=? OR away_team=?",
-                (team_name, team_name))
+                "SELECT COUNT(*) FROM match_schedules"
+                + " " + "WHERE home_team=? OR away_team=?"
+                + " " + "AND kickoff_time > ?",
+                (team_name, team_name, date_time))
             row = cur.fetchone()
             db.close()
             number_of_matches = row[0]
             return number_of_matches
 
-        except sqlite3.Error as e:
+        except sqlite3.Error:
             db.close()
-            print('database error: ', e)
-            return False
+            raise DatabaseActionError
 
     @classmethod
     def get_categories(self):
@@ -142,7 +146,7 @@ class MatchScheduleAction:
         -------
         categories : list
             カテゴリ名のリスト。
-        
+
         """
         db = DB(Config.DATABASE)
         cur = db.cursor()
@@ -159,10 +163,9 @@ class MatchScheduleAction:
 
             return categories
 
-        except sqlite3.Error as e:
+        except sqlite3.Error:
             db.close()
-            print('database error: ', e)
-            return categories
+            raise DatabaseActionError
 
     @staticmethod
     def _trim_team_name(team_name):
@@ -180,7 +183,7 @@ class MatchScheduleAction:
         -------
         trimed_team_name : str
             文字列削除後のチーム名。
-        
+
         """
         team_name = team_name.strip()
         if re.search(r'^旭川市立', team_name):
@@ -196,7 +199,7 @@ class MatchScheduleAction:
         return trimed_team_name
 
     @classmethod
-    def find_all(self, team_name, category):
+    def find(self, team_name, category, date_time):
         """
         対象のチーム・カテゴリの全ての試合スケジュールを返す。
 
@@ -206,6 +209,8 @@ class MatchScheduleAction:
             対象のチーム名。
         category : str
             対象のカテゴリ名。
+        date_time : datetime
+            基準の日時。
 
         Returns
         -------
@@ -232,8 +237,10 @@ class MatchScheduleAction:
                 category = '%' + category + '%'
 
             search_condition = "WHERE" + " " \
-                + "(home_team LIKE ? OR away_team LIKE ?)" + " " \
-                + "AND category LIKE ?"
+                + "(home_team LIKE ? OR away_team LIKE ?)" \
+                + " " + "AND category LIKE ?" \
+                + " " + "AND kickoff_time > ?"
+            search_value = (team_name, team_name, category, date_time)
             cur.execute(
                 "SELECT" + " "
                 + "id,number,category,match_number,kickoff_time,"
@@ -241,12 +248,12 @@ class MatchScheduleAction:
                 + "FROM match_schedules" + " "
                 + search_condition + " "
                 + "ORDER BY kickoff_time;",
-                (team_name, team_name, category))
+                search_value)
             rows = cur.fetchall()
             cur.execute(
                 "SELECT COUNT(*) FROM match_schedules"
                 + " " + search_condition + ";",
-                (team_name, team_name, category))
+                search_value)
             row = cur.fetchone()
             db.close()
             number = row[0]
@@ -255,70 +262,9 @@ class MatchScheduleAction:
 
             return results, number
 
-        except sqlite3.Error as e:
+        except sqlite3.Error:
             db.close()
-            print('database error: ', e)
-            return results
-
-    @classmethod
-    def find_latest(self, team_name, category, date_time):
-        """
-        対象のチーム・カテゴリの基準の日時からの最新の試合スケジュールを返す。
-
-        Parameters
-        ----------
-        team_name : str
-            対象のチーム名。
-        category : str
-            対象のカテゴリ。
-        date_time : datetime
-            基準の日時。
-
-        Returns
-        -------
-        results : MatchSchedule object
-            試合スケジュールデータ。
-        
-        """
-        db = DB(Config.DATABASE)
-        cur = db.cursor()
-        try:
-            team_name = self._trim_team_name(team_name)
-            if team_name == '' or team_name == '全て':
-                team_name = '%'
-            else:
-                team_name = '%' + team_name + '%'
-
-            # If category is none or "all", select all category.
-            if category == '' or category == '全て':
-                category = '%'
-            else:
-                category = '%' + category + '%'
-
-            cur.execute(
-                "SELECT" + " "
-                + "id,number,category,match_number,kickoff_time,"
-                + "home_team,away_team,studium,updated" + " "
-                + "FROM match_schedules" + " "
-                + "WHERE (home_team LIKE ? OR away_team LIKE ?)" + " "
-                + "AND category LIKE ?"
-                + "AND kickoff_time > ? "
-                + "ORDER BY kickoff_time "
-                + "LIMIT 1;",
-                (team_name, team_name, category, date_time))
-            row = cur.fetchone()
-            db.close()
-            if row is None:
-                results = None
-            else:
-                results = MatchSchedule(**row)
-
-            return results
-
-        except sqlite3.Error as e:
-            db.close()
-            print('database error: ', e)
-            return None
+            raise DatabaseActionError
 
     @classmethod
     def get_last_update(self):
@@ -345,7 +291,6 @@ class MatchScheduleAction:
                 last_update = MatchSchedule.get_datetime(row[0])
                 return datetime.strftime(last_update, '%Y/%m/%d %H:%M JST')
 
-        except sqlite3.Error as e:
+        except sqlite3.Error:
             db.close()
-            print('database error: ', e)
-            return None
+            raise DatabaseActionError
