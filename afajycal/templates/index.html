@@ -10,22 +10,21 @@
     <div class="alert alert-warning mb-5">
       <h2 class="h5 alert-heading">Note</h2>
       <hr>
-      <p>This site is created using data which is downloaded from <a class="alert-link" href="http://afa11.com/asahijy/" title="旭川地区サッカー協会第3種事業委員会">Asahikawa Football Association Official Web site</a>.</p>
-      <p>Please refer to the official website for accurate information.</p>
-      <p class="text-right">Last Update: <strong>{{ last_update }}</strong></p>
+      <p>このWebサイトは旭川地区サッカー協会第3種委員会Webサイトからダウンロードしたデータを参考に構成されています。正確な情報は必ず<a href="http://afa11.com/asahijy/" title="旭川地区サッカー協会第3種事業委員会">公式Webサイト</a>を確認してください。</p>
+      <p class="text-right">最終更新日: <strong>{{ last_update }}</strong></p>
     </div>
     <ul class="list-inline mb-5">
       {% for row in team_names_and_match_number %}
-      <li class="list-inline-item mr-2 mb-2"><a class="btn btn-sm btn-secondary" href="./find_all?team_name={{ row[0] }}&category=All">{{ row[1] }} ({{ row[2] }})</a></li>
+      <li class="list-inline-item mr-2 mb-2"><a class="btn btn-sm btn-secondary" href="./find_all?team_name={{ row[0] }}&category=">{{ row[1] }} ({{ row[2] }})</a></li>
       {% endfor %}
     </ul>
     <form class="form mb-5" action="./find_all" method="GET">
       <div class="form-group">
-        <label class="h5 text-secondary" for="team_name">Enter team name</label>
-        <input class="form-control form-control-lg" type="text" name="team_name" value="" placeholder="ex. 六合">
+        <label class="h5 text-secondary" for="team_name">チーム名を入力</label>
+        <input class="form-control form-control-lg" type="text" name="team_name" value="" placeholder="（例）六合">
       </div>
       <div class="form-group">
-        <label class="h5 text-secondary" for="category">Choose category</label>
+        <label class="h5 text-secondary" for="category">カテゴリを選択</label>
         <select class="form-control form-control-lg" name="category">
           {% for row in categories %}
           <option value="{{ row[1] }}">{{ row[1] }}</option>
@@ -33,7 +32,7 @@
         </select>
       </div>
       <div class="form-group">
-        <button type="submit" class="btn btn-lg btn-primary btn-block">Search match schedules</button>
+        <button type="submit" class="btn btn-lg btn-primary btn-block">試合日程を検索</button>
       </div>
     </form>
   </div>

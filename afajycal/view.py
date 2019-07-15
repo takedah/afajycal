@@ -23,7 +23,7 @@ def team_names_and_match_number():
 
 def categories():
     categories = MatchScheduleAction.get_categories()
-    categories.insert(0, "All")
+    categories.insert(0, "全て")
     tmp = list()
     for category in categories:
         tmp.append([
@@ -60,12 +60,12 @@ def index():
 @web.route('/find_all')
 def find_all():
     category = escape(request.args.get('category'))
-    if category == '' or category == 'Choose category...':
-        category = 'All'
+    if category == '' or category == 'カテゴリを選択':
+        category = '全て'
 
     team_name = escape(request.args.get('team_name'))
     if team_name == '':
-        team_name = 'All'
+        team_name = '全て'
 
     JST = timezone(timedelta(hours=+9), 'JST')
     time_now = datetime.now(JST)

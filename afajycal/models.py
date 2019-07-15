@@ -4,24 +4,25 @@ from datetime import datetime, timedelta, timezone
 
 class MatchSchedule:
     """
-    AFA junior youth soccer match schedule.
+    試合スケジュールを表す。
 
     Attributes
     ----------
     number : int
-        schedule item number
+        試合番号。
     category : str
-        match category
+        試合カテゴリ。
     match_number : str
-        serial number by division
+        試合カテゴリごとの連番。
     kickoff_time : datetime
-        match kickoff datetime
+        試合開始日時。
     home_team : str
-        home team name
+        ホームチーム名。
     away_team : str
-        away team name
+        アウェイチーム名。
     studium : str
-        match place
+        試合会場。
+    
     """
     def __init__(self, **kwargs):
         self.number = kwargs['number']
@@ -35,19 +36,18 @@ class MatchSchedule:
     @staticmethod
     def get_datetime(datetime_str):
         """
-        translate a datetime string which is outputed by SQLite3
-        to datetime object.
+        SQLite3が返す文字列の日時をdatetimeオブジェクトに変換する。
 
         Parameters
         ----------
         datetime_str : str
-            datetime string which is outputed by SQLite3.
-            %Y-%m-%d %H:%M:%S + time difference
+            SQLite3が返す文字列の日時。
+            %Y-%m-%d %H:%M:%S + 時差
 
         Returns
         -------
         datetime_object : datetime
-            datetime object.
+            datetimeオブジェクト。
 
         """
         base_datetime = datetime_str[:19]
@@ -58,23 +58,24 @@ class MatchSchedule:
 
     def kickoff(self):
         """
-        return kickoff datetime string.
+        キックオフ日時を文字列に変換して返す。
 
         Returns
+        -------
         kickoff_datetime : str
-            kickoff datetime.
+            キックオフ日時の文字列。
 
         """
         return self.kickoff_time.strftime('%Y/%m/%d %a %H:%M')
 
     def google_calendar_link(self):
         """
-        output a url string for adding to google calendar.
+        試合スケジュールをgoogleカレンダーに追加できるURLを生成する。
 
         Returns
         -------
         link : str
-            a url for adding to google calendar.
+            googleカレンダー追加用URL。
 
         """
         title = self.category + ' (' + self.home_team + ' vs ' \

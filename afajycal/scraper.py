@@ -12,17 +12,18 @@ class HTMLDownloadError(Exception):
 
 class Scraper:
     """
-    get junior youth soccer match schedule data from AOSC Web site.
+    旭川地区サッカー協会第3種委員会Webサイトから試合スケジュールデータを
+    抽出する。
 
     Attributes
     ----------
     url : str
-        AOSC web site's URL where the junior youth soccer match schedule
-        in Asahikawa is written.
+        旭川地区サッカー協会第3種委員会WebサイトのURL。
     year : int
-        target year.
+        対象年度。
     JST : timezone
-        timezone of Asahikawa, Japan.
+        日本時間のtimezoneオブジェクト。
+    
     """
 
     def __init__(self):
@@ -32,15 +33,13 @@ class Scraper:
 
     def _download_html_content(self):
         """
-        download HTML file from AOSC Web site where
-        the junior youth soccer match schedule in Asahikawa
-        is written.
+        対象URLのHTMLファイルをダウンロードして返す。
 
         Returns
         -------
         html_content : bytes
-        html contents. If some errors occured in requests,
-        this method returns None.
+            HTMLコンテンツ。ダウンロードに失敗したらNoneを返す。
+        
         """
         try:
             response = requests.get(self.afa_url)
@@ -55,17 +54,14 @@ class Scraper:
 
     def _html_to_list(self):
         """
-        extract table element from HTML file in AOSC Web site
-        where the junior youth soccer match schedule in Asahikawa
-        is written.
+        HTMLコンテンツから試合スケジュールの書かれたtableの内容のみ配列に
+        格納する。
 
         Returns
         -------
         data : list
-            a list extracted from this URL which the junior youth soccer
-            match schedule is written.
-            if downloaded HTML content doesn't have table which is written
-            match suchedule, this method returns empty list.
+            table要素の内容を行ごとに二次元配列に格納したもの。
+
         """
         html_content = self._download_html_content()
         if html_content is None:
@@ -96,24 +92,24 @@ class Scraper:
         return data
 
     @staticmethod
-    def _get_month(str):
+    def _get_month(month_str):
         """
-        change string to integer of month.
+        月を表す文字列を数値に変換する。
 
         Parameters
         ----------
-        str : str
-            string of month number.
+        month_str : str
+            月を表す文字列。
 
         Returns
         -------
         month : int
-            integer of month.
+            数値。月を表すのに適切ではない数値だった場合、1を返す。
+        
         """
-
         month = 0
-        if re.search(r'^[0-9]{1,2}$', str):
-            month = int(str)
+        if re.search(r'^[0-9]{1,2}$', month_str):
+            month = int(month_str)
             if month < 1 or 12 < month:
                 month = 1
         else:
@@ -122,24 +118,24 @@ class Scraper:
         return month
 
     @staticmethod
-    def _get_day(str):
+    def _get_day(day_str):
         """
-        change string to integer of day.
+        日を表す文字列を数値に変換する。
 
         Parameters
         ----------
-        str : str
-            string of day number.
+        day_str : str
+            日を表す文字列。日を表すのに適切ではない数値だった場合、1を返す。
 
         Returns
         -------
         day : int
-            integer of day.
+            数値。
+        
         """
-
         day = 0
-        if re.search(r'^[0-9]{1,2}$', str):
-            day = int(str)
+        if re.search(r'^[0-9]{1,2}$', day_str):
+            day = int(day_str)
             if day < 1 or 31 < day:
                 day = 1
         else:
@@ -148,24 +144,25 @@ class Scraper:
         return day
 
     @staticmethod
-    def _get_time(str):
+    def _get_time(time_str):
         """
-        change string to integer of time.
+        時間・分を表す文字列を数値に変換する。
 
         Parameters
         ----------
         str : str
-            string of time.
+            時間・分を表す文字列。
 
         Returns
         -------
         time : list
-            list includes integer of hour and minute.
+            時間・分を数値で格納した配列。時間・分を表すのに適切ではない
+            数値だった場合、配列のそれぞれの値は0とする。
+        
         """
-
         time = list()
-        if re.search(r'^[0-9]{1,2}:[0-9]{2}$', str):
-            tmp = str.split(':')
+        if re.search(r'^[0-9]{1,2}:[0-9]{2}$', time_str):
+            tmp = time_str.split(':')
             hour = int(tmp[0])
             minute = int(tmp[1])
             if hour < 0 or 24 < hour:
@@ -181,21 +178,22 @@ class Scraper:
     @staticmethod
     def _get_valid_year(month, year):
         """
-        if the month is between 1 and 3, add 1 to the year.
+        試合スケジュールの月が1月から3月までの間だった場合、年を1加算して
+        補正する。
 
         Parameters
         ----------
         month : int
-            month number.
+            月。
         year : int
-            year number.
+            年。
 
         Returns
         -------
         valid_year : int
-            integer of month.
+            補正後の年。
+        
         """
-
         if 3 < month:
             valid_year = year
         else:
@@ -205,17 +203,17 @@ class Scraper:
 
     def get_schedule_list(self):
         """
-        get junior youth soccer match schedule data which extracted from
-        HTML file in AOSC Web site.
+        旭川地区サッカー協会第3種委員会Webサイトから試合スケジュールデータを
+        抽出する。
 
         Returns
         -------
         schedule_list : list of dicts
-            a list includes dict data which is match schedule.
-            these dicts have data below.
-            number, division, match_group,
-            match_number, match_date, kickoff_time,
-            home_team, away_team, studium.
+            試合スケジュールデータ。
+            データ配列は次の要素で構成される。
+            連番、カテゴリ、試合番号、試合開始日時、ホームチーム名、
+            アウェイチーム名、試合会場
+
         """
         schedule_list = list()
         for item in self._html_to_list():

@@ -9,24 +9,26 @@ from afajycal.models import MatchSchedule
 
 class MatchScheduleAction:
     """
-    junior youth soccer match schedule in Asahikawa.
+    旭川地区サッカー協会第3種事業委員会Webサイトから試合スケジュールを取得する。
+
     """
     @classmethod
     def create(self):
         """
-        import matches list into shchedule database.
+        旭川地区サッカー協会第3種事業委員会Webサイトからダウンロードした
+        データを、データベースへ登録する。登録の時、既存のデータベースの
+        データは一旦全て削除してから処理を行う。
 
         Returns
         -------
-        boolean
-            If schedules data import is successfull, return true.
-            otherwise return false.
+        process_result : boolean
+            データの登録が成功したら、Trueを返す。失敗したら、Falseを返す。
+
         """
         db = DB(Config.DATABASE)
         cur = db.cursor()
         scraper = Scraper()
         try:
-            # clear current table.
             cur.execute('DELETE FROM match_schedules')
             values = list()
             now_time = datetime.now(timezone(timedelta(hours=+9), 'JST'))
@@ -63,12 +65,13 @@ class MatchScheduleAction:
     @classmethod
     def get_team_names(self):
         """
-        get all team names.
+        全てのチーム名を返す。
 
         Returns
         -------
         team_names : list
-            a list includes team name.
+            チーム名のリスト。
+
         """
 
         db = DB(Config.DATABASE)
@@ -86,9 +89,7 @@ class MatchScheduleAction:
             for row in away_team_rows:
                 team_names.append(row['away_team'])
 
-            # remove empty elements.
             team_names = list(filter(lambda a: a != "", team_names))
-            # get unique team names.
             team_names = sorted(set(team_names), key=team_names.index)
             return team_names
 
@@ -100,17 +101,18 @@ class MatchScheduleAction:
     @classmethod
     def get_number_of_matches(self, team_name):
         """
-        get number of matches for target team.
+        対象チームの試合数を返す。
 
         Parameters
         ----------
         team_name : str
-            target team name
+            対象のチーム名。
 
         Returns
         -------
         number_of_matches : int
-            number of matches for target team.
+            対象のチームの試合数。
+
         """
 
         db = DB(Config.DATABASE)
@@ -134,12 +136,13 @@ class MatchScheduleAction:
     @classmethod
     def get_categories(self):
         """
-        get all category of AFA junior youth soccer match.
+        全てのカテゴリ名を返す。
 
         Returns
         -------
         categories : list
-            a category list.
+            カテゴリ名のリスト。
+        
         """
         db = DB(Config.DATABASE)
         cur = db.cursor()
@@ -164,19 +167,20 @@ class MatchScheduleAction:
     @staticmethod
     def _trim_team_name(team_name):
         """
-        If parameter string starts "旭川市立" or parameter string
-        ends "中学校" or "中", remove these string for adjusting
-        team name to saved team names in DB.
+        データベースに登録されているチーム名が「旭川市立」で始まったり、
+        「中学校」、「中」で終わっていないため、チーム名を検索できるよう、
+        これらの文字列を削除する。
 
         Parameters
         ----------
         team_name : str
-            source team name.
+            元のチーム名。
 
         Returns
         -------
         trimed_team_name : str
-            trimed team name.
+            文字列削除後のチーム名。
+        
         """
         team_name = team_name.strip()
         if re.search(r'^旭川市立', team_name):
@@ -194,22 +198,22 @@ class MatchScheduleAction:
     @classmethod
     def find_all(self, team_name, category):
         """
-        find targeted team's match schedule.
+        対象のチーム・カテゴリの全ての試合スケジュールを返す。
 
         Parameters
         ----------
         team_name : str
-            target team name.
+            対象のチーム名。
         category : str
-            target match division.
+            対象のカテゴリ名。
 
         Returns
         -------
         results : list of MatchSchedule object
-            list of tuples which selected from schedule table.
-
+            試合スケジュールデータ。
         number : int
-            number of list
+            検索結果の試合数。
+
         """
         db = DB(Config.DATABASE)
         cur = db.cursor()
@@ -217,14 +221,12 @@ class MatchScheduleAction:
         number = 0
         try:
             team_name = self._trim_team_name(team_name)
-            # If team name is none or "all", select all team.
-            if team_name == '' or team_name == 'All':
+            if team_name == '' or team_name == '全て':
                 team_name = '%'
             else:
                 team_name = '%' + team_name + '%'
 
-            # If category is none or "all", select all category.
-            if category == '' or category == 'All':
+            if category == '' or category == '全て':
                 category = '%'
             else:
                 category = '%' + category + '%'
@@ -261,34 +263,34 @@ class MatchScheduleAction:
     @classmethod
     def find_latest(self, team_name, category, date_time):
         """
-        find targeted team's latest match schedule after the targeted date.
+        対象のチーム・カテゴリの基準の日時からの最新の試合スケジュールを返す。
 
         Parameters
         ----------
         team_name : str
-            target team name.
+            対象のチーム名。
         category : str
-            target match division.
+            対象のカテゴリ。
         date_time : datetime
-            base datetime.
+            基準の日時。
 
         Returns
         -------
         results : MatchSchedule object
-            schedule.
+            試合スケジュールデータ。
+        
         """
         db = DB(Config.DATABASE)
         cur = db.cursor()
         try:
             team_name = self._trim_team_name(team_name)
-            # If team name is none or "all", select all team.
-            if team_name == '' or team_name == 'All':
+            if team_name == '' or team_name == '全て':
                 team_name = '%'
             else:
                 team_name = '%' + team_name + '%'
 
             # If category is none or "all", select all category.
-            if category == '' or category == 'All':
+            if category == '' or category == '全て':
                 category = '%'
             else:
                 category = '%' + category + '%'
@@ -321,12 +323,12 @@ class MatchScheduleAction:
     @classmethod
     def get_last_update(self):
         """
-        get last update time of 'match_schedules' table.
+        データベースの最終更新日を返す。
 
         Returns
         -------
         last_update : str
-          value of newest 'update' column.
+            最終更新年月日。
 
         """
         db = DB(Config.DATABASE)
