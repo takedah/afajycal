@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% block content %}
+<main>
+  <div class="container">
+    <section>
+    <h1 class="h3">404 Page Not Found.</h1>
+    <p class="alert alert-danger">お探しのページは見つかりませんでした。</p>
+    <section>
+      <h2 class="h3">試合日程を検索</h2>
+      <form class="form mb-5" action="./find" method="GET">
+        <div class="form-group">
+          <label class="h5 text-secondary" for="team_name">チーム名を入力</label>
+          <input class="form-control form-control-lg" type="text" name="team_name" value="" placeholder="例）六合">
+        </div>
+        <div class="form-group">
+          <label class="h5 text-secondary" for="category">カテゴリを選択</label>
+          <select class="form-control form-control-lg" name="category">
+            {% for row in categories %}
+            <option value="{{ row[1] }}">{{ row[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <button type="submit" class="btn btn-lg btn-primary btn-block">検索</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</main>
+{% endblock %}

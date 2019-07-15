@@ -92,5 +92,12 @@ def find():
         results_number=results_number, last_update=last_update)
 
 
+@web.errorhandler(404)
+def not_found(error):
+    title = '404 Page Not Found.'
+    return render_template(
+        '404.html', title=title, categories=categories())
+
+
 if __name__ == '__main__':
     web.run(debug=True)
