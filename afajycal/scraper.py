@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 import requests
 from requests import Timeout, HTTPError
 from bs4 import BeautifulSoup
@@ -226,6 +226,7 @@ class Scraper:
                 'number': int(item[0]),
                 'category': item[1],
                 'match_number': item[3],
+                'match_date': date(year, month, day),
                 'kickoff_time': datetime(
                     year, month, day, time[0], time[1], tzinfo=self.JST),
                 'home_team': item[10].replace('\u3000', ''),

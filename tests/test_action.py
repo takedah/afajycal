@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from unittest.mock import patch
 from afajycal.action import MatchScheduleAction
 
@@ -12,6 +12,7 @@ class TestMatchScheduleAction(unittest.TestCase):
             'number': 480,
             'category': 'サテライト',
             'match_number': 'ST61',
+            'match_date': date(self.year, 6, 2),
             'kickoff_time': datetime(
                 self.year, 6, 2, 14, 0, tzinfo=self.JST),
             'home_team': '六合',
@@ -20,6 +21,7 @@ class TestMatchScheduleAction(unittest.TestCase):
                 'number': 469,
                 'category': 'サテライト',
                 'match_number': 'ST50',
+                'match_date': date(self.year, 6, 8),
                 'kickoff_time': datetime(
                     self.year, 6, 8, 14, 0, tzinfo=self.JST),
                 'home_team': '永山南',
@@ -28,6 +30,7 @@ class TestMatchScheduleAction(unittest.TestCase):
                     'number': 480,
                     'category': 'test',
                     'match_number': 'test',
+                    'match_date': date(self.year, 1, 1),
                     'kickoff_time': datetime(
                         self.year, 1, 1, 0, 0, tzinfo=self.JST),
                     'home_team': 'test',
@@ -54,8 +57,8 @@ class TestMatchScheduleAction(unittest.TestCase):
     def test_get_number_of_matches(self, config_mock):
         config_mock.DATABASE = 'tests/afajycal_test.db'
         self.assertEqual(
-                MatchScheduleAction.get_number_of_matches(
-                    '六合', datetime(2019, 6, 2, 13, 0, tzinfo=self.JST)), 2)
+            MatchScheduleAction.get_number_of_matches(
+                '六合', datetime(2019, 6, 2, 13, 0, tzinfo=self.JST)), 2)
 
     @patch('afajycal.action.Config')
     def test_get_categories(self, config_mock):
@@ -73,8 +76,8 @@ class TestMatchScheduleAction(unittest.TestCase):
     def test_find(self, config_mock):
         config_mock.DATABASE = 'tests/afajycal_test.db'
         res = MatchScheduleAction.find(
-                '六合', 'サテライト',
-                datetime(2019, 6, 2, 13, 0, tzinfo=self.JST))
+            '六合', 'サテライト',
+            datetime(2019, 6, 2, 13, 0, tzinfo=self.JST))
         schedule = res[0]
         number = res[1]
         self.assertEqual(schedule[0].away_team, '中富良野')
@@ -95,6 +98,19 @@ class TestMatchScheduleAction(unittest.TestCase):
         number = res[1]
         self.assertEqual(schedule, [])
         self.assertEqual(number, 0)
+
+    @patch('afajycal.action.Config')
+    def test_day_match(self, config_mock):
+        config_mock.DATABASE = 'tests/afajycal_test.db'
+        res = MatchScheduleAction.day_match(date(2019, 6, 2))
+        schedule = res[0]
+        number = res[1]
+        self.assertEqual(schedule[0].away_team, '中富良野')
+        self.assertEqual(schedule[0].studium, '花咲球技場')
+        self.assertEqual(
+            schedule[0].kickoff_time,
+            datetime(2019, 6, 2, 14, 0, tzinfo=self.JST))
+        self.assertEqual(number, 1)
 
 
 if __name__ == '__main__':

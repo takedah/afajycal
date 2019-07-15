@@ -43,6 +43,7 @@ class MatchScheduleAction:
                     row['number'],
                     row['category'],
                     row['match_number'],
+                    row['match_date'],
                     row['kickoff_time'],
                     row['home_team'],
                     row['away_team'],
@@ -52,9 +53,9 @@ class MatchScheduleAction:
 
             cur.executemany(
                 'INSERT OR IGNORE INTO match_schedules ('
-                + 'number, category, match_number, '
+                + 'number, category, match_number, match_date, '
                 + 'kickoff_time, home_team, away_team, studium, '
-                + 'updated) VALUES (?,?,?,?,?,?,?,?);',
+                + 'updated) VALUES (?,?,?,?,?,?,?,?,?);',
                 values)
             db.commit()
             db.close()
@@ -201,7 +202,7 @@ class MatchScheduleAction:
     @classmethod
     def find(self, team_name, category, date_time):
         """
-        対象のチーム・カテゴリの全ての試合スケジュールを返す。
+        基準日時以降の対象のチーム・カテゴリの全ての試合スケジュールを返す。
 
         Parameters
         ----------
@@ -243,7 +244,57 @@ class MatchScheduleAction:
             search_value = (team_name, team_name, category, date_time)
             cur.execute(
                 "SELECT" + " "
-                + "id,number,category,match_number,kickoff_time,"
+                + "id,number,category,match_number,match_date,kickoff_time,"
+                + "home_team,away_team,studium,updated" + " "
+                + "FROM match_schedules" + " "
+                + search_condition + " "
+                + "ORDER BY kickoff_time;",
+                search_value)
+            rows = cur.fetchall()
+            cur.execute(
+                "SELECT COUNT(*) FROM match_schedules"
+                + " " + search_condition + ";",
+                search_value)
+            row = cur.fetchone()
+            db.close()
+            number = row[0]
+            for r in rows:
+                results.append(MatchSchedule(**r))
+
+            return results, number
+
+        except sqlite3.Error:
+            db.close()
+            raise DatabaseActionError
+
+    @classmethod
+    def day_match(self, target_date):
+        """
+        基準日に行われる試合スケジュールのみ返す。
+
+        Parameters
+        ----------
+        target_date : date
+            基準の日時。
+
+        Returns
+        -------
+        results : list of MatchSchedule object
+            試合スケジュールデータ。
+        number : int
+            検索結果の試合数。
+
+        """
+        db = DB(Config.DATABASE)
+        cur = db.cursor()
+        results = list()
+        number = 0
+        try:
+            search_condition = "WHERE match_date = ?"
+            search_value = (target_date,)
+            cur.execute(
+                "SELECT" + " "
+                + "id,number,category,match_number,match_date,kickoff_time,"
                 + "home_team,away_team,studium,updated" + " "
                 + "FROM match_schedules" + " "
                 + search_condition + " "

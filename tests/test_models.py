@@ -8,6 +8,7 @@ class TestMatchSchedule(unittest.TestCase):
             'number': 480,
             'category': 'サテライト',
             'match_number': 'ST61',
+            'match_date': '2019-06-02',
             'kickoff_time': '2019-06-02 14:00:00+09:00',
             'home_team': '六合',
             'away_team': '中富良野',

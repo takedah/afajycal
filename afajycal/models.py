@@ -14,6 +14,8 @@ class MatchSchedule:
         試合カテゴリ。
     match_number : str
         試合カテゴリごとの連番。
+    match_date : date
+        試合日。
     kickoff_time : datetime
         試合開始日時。
     home_team : str
@@ -29,6 +31,7 @@ class MatchSchedule:
         self.number = kwargs['number']
         self.category = kwargs['category']
         self.match_number = kwargs['match_number']
+        self.match_date = kwargs['match_date']
         self.kickoff_time = self.get_datetime(kwargs['kickoff_time'])
         self.home_team = kwargs['home_team']
         self.away_team = kwargs['away_team']

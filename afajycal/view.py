@@ -51,12 +51,19 @@ def add_security_headers(response):
 
 @web.route('/')
 def index():
+    JST = timezone(timedelta(hours=+9), 'JST')
+    date_now = datetime.now(JST).date()
+    res = MatchScheduleAction.day_match(date_now)
+    schedule = res[0]
+    results_number = res[1]
     last_update = MatchScheduleAction.get_last_update()
     title = 'AFA junior youth match schedules'
     return render_template(
         'index.html', title=title, this_year=this_year,
         team_names_and_match_number=team_names_and_match_number(),
-        categories=categories(), last_update=last_update)
+        categories=categories(), date_now=date_now.strftime('%Y-%m-%d %a'),
+        schedule=schedule, results_number=results_number,
+        last_update=last_update)
 
 
 @web.route('/find')
