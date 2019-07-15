@@ -1,13 +1,13 @@
 # AFA junior youth soccer match calendar
 
-This is a web application which can search AFA junior youth soccer match shcedule.
-This web application is composed of Flask web application framework.
+旭川地区サッカー協会第3種事業委員会Webサイトから、試合日程データをダウンロードして検索できるようにするものです。
+FlaskとSQLite3を使っています。
 
 ## Description
 
-1. This system downloads AFA junior youth soccer match schedule data from AFA Web site.
-2. downloaded data are imported into the SQLite3 database.
-3. You can get match schedule data which is specified by conditions(category, team name) from this database through this system.
+1. 旭川地区サッカー協会第3種事業委員会Webサイトから試合日程の掲載されているページをダウンロードして必要なデータを抽出します。
+2. 抽出したデータをSQLite3データベースに格納します。
+3. Webフォームでチーム名、カテゴリごとに試合日程を検索できるようになります。
 
 ## Requirement
 

@@ -10,7 +10,7 @@ with open('LICENSE') as f:
 setup(
     name='aoscjycal',
     version='0.1.0',
-    description='Calendar of AOSC Junior Youth soccer match schedules',
+    description='Calendar of AFA Junior Youth soccer match schedules',
     long_description=readme,
     author='Hiroki Takeda',
     author_email='takedahiroki@gmail.com',
