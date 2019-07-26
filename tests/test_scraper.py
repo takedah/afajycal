@@ -48,6 +48,21 @@ class TestScraper(unittest.TestCase):
           <td>vs</td>
           <td>六　合</td>
           </tr>
+          <tr>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          </tr>
           </tbody>
           </table>
           '''
@@ -93,7 +108,12 @@ class TestScraper(unittest.TestCase):
                 'ST50', '', '6',
                 '8', '', '花咲球技場',
                 '14:00', '永山南', 'vs',
-                '六　合']]
+                '六　合'], [
+                '', '', '',
+                '', '', '',
+                '', '', '',
+                '', '', '',
+                '']]
         self.assertEqual(scraper._html_to_list(), expect)
         # If this method can't get HTML content we assumed
         mock_requests.get.return_value = Mock(status_code=404)

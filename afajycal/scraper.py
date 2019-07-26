@@ -217,21 +217,22 @@ class Scraper:
         """
         schedule_list = list()
         for item in self._html_to_list():
-            tmp = dict()
-            month = self._get_month(item[5])
-            day = self._get_day(item[6])
-            time = self._get_time(item[9])
-            year = self._get_valid_year(month, self.this_year)
-            tmp = {
-                'number': int(item[0]),
-                'category': item[1],
-                'match_number': item[3],
-                'match_date': date(year, month, day),
-                'kickoff_time': datetime(
-                    year, month, day, time[0], time[1], tzinfo=self.JST),
-                'home_team': item[10].replace('\u3000', ''),
-                'away_team': item[12].replace('\u3000', ''),
-                'studium': item[8]}
-            schedule_list.append(tmp)
+            if not item[0] == '':
+                tmp = dict()
+                month = self._get_month(item[5])
+                day = self._get_day(item[6])
+                time = self._get_time(item[9])
+                year = self._get_valid_year(month, self.this_year)
+                tmp = {
+                    'number': int(item[0]),
+                    'category': item[1],
+                    'match_number': item[3],
+                    'match_date': date(year, month, day),
+                    'kickoff_time': datetime(
+                        year, month, day, time[0], time[1], tzinfo=self.JST),
+                    'home_team': item[10].replace('\u3000', ''),
+                    'away_team': item[12].replace('\u3000', ''),
+                    'studium': item[8]}
+                schedule_list.append(tmp)
 
         return schedule_list
