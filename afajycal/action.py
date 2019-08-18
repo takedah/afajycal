@@ -126,7 +126,7 @@ class MatchScheduleAction:
         try:
             cur.execute(
                 "SELECT COUNT(*) FROM match_schedules"
-                + " " + "WHERE home_team=? OR away_team=?"
+                + " " + "WHERE (home_team=? OR away_team=?)"
                 + " " + "AND kickoff_time > ?",
                 (team_name, team_name, date_time))
             row = cur.fetchone()
