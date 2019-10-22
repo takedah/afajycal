@@ -27,9 +27,9 @@ class Scraper:
     """
 
     def __init__(self):
-        self.afa_url = Config.AOSC_URL
+        self.afa_url = Config.AFA_URL
         self.this_year = Config.THIS_YEAR
-        self.JST = timezone(timedelta(hours=+9), 'JST')
+        self.JST = timezone(timedelta(hours=+9), "JST")
 
     def _download_html_content(self):
         """
@@ -43,7 +43,7 @@ class Scraper:
         """
         try:
             response = requests.get(self.afa_url)
-        except(ConnectionError, Timeout, HTTPError):
+        except (ConnectionError, Timeout, HTTPError):
             return None
 
         if response.status_code != 200:
@@ -65,28 +65,40 @@ class Scraper:
         """
         html_content = self._download_html_content()
         if html_content is None:
-            raise HTMLDownloadError('cannot get HTML content.')
+            raise HTMLDownloadError("cannot get HTML content.")
 
-        soup = BeautifulSoup(html_content, 'html.parser')
-        if soup.find('table', attrs={'border': '1'}) is None:
+        soup = BeautifulSoup(html_content, "html.parser")
+        if soup.find("table", attrs={"border": "1"}) is None:
             return []
 
         data = list()
-        for table in soup.find_all('table', attrs={'border': '1'}):
-            for tr in table.find_all('tr'):
+        for table in soup.find_all("table", attrs={"border": "1"}):
+            for tr in table.find_all("tr"):
                 tmp = list()
-                val = ''
-                for td in tr.find_all('td'):
+                val = ""
+                for td in tr.find_all("td"):
                     if td.string is None:
-                        val = ''
+                        val = ""
                     else:
                         val = td.string
                     tmp.append(val)
 
                 # delete header line.
                 if tmp != [
-                        'No.', '', '', 'M.No.', '節', '月', '日',
-                        'G', '会場', 'KO', 'HOME', '', 'AWAY']:
+                    "No.",
+                    "",
+                    "",
+                    "M.No.",
+                    "節",
+                    "月",
+                    "日",
+                    "G",
+                    "会場",
+                    "KO",
+                    "HOME",
+                    "",
+                    "AWAY",
+                ]:
                     data.append(tmp)
 
         return data
@@ -108,7 +120,7 @@ class Scraper:
 
         """
         month = 0
-        if re.search(r'^[0-9]{1,2}$', month_str):
+        if re.search(r"^[0-9]{1,2}$", month_str):
             month = int(month_str)
             if month < 1 or 12 < month:
                 month = 1
@@ -134,7 +146,7 @@ class Scraper:
 
         """
         day = 0
-        if re.search(r'^[0-9]{1,2}$', day_str):
+        if re.search(r"^[0-9]{1,2}$", day_str):
             day = int(day_str)
             if day < 1 or 31 < day:
                 day = 1
@@ -161,8 +173,8 @@ class Scraper:
 
         """
         time = list()
-        if re.search(r'^[0-9]{1,2}:[0-9]{2}$', time_str):
-            tmp = time_str.split(':')
+        if re.search(r"^[0-9]{1,2}:[0-9]{2}$", time_str):
+            tmp = time_str.split(":")
             hour = int(tmp[0])
             minute = int(tmp[1])
             if hour < 0 or 24 < hour:
@@ -217,22 +229,24 @@ class Scraper:
         """
         schedule_list = list()
         for item in self._html_to_list():
-            if not item[0] == '':
+            if not item[0] == "":
                 tmp = dict()
                 month = self._get_month(item[5])
                 day = self._get_day(item[6])
                 time = self._get_time(item[9])
                 year = self._get_valid_year(month, self.this_year)
                 tmp = {
-                    'number': int(item[0]),
-                    'category': item[1],
-                    'match_number': item[3],
-                    'match_date': date(year, month, day),
-                    'kickoff_time': datetime(
-                        year, month, day, time[0], time[1], tzinfo=self.JST),
-                    'home_team': item[10].replace('\u3000', ''),
-                    'away_team': item[12].replace('\u3000', ''),
-                    'studium': item[8]}
+                    "number": int(item[0]),
+                    "category": item[1],
+                    "match_number": item[3],
+                    "match_date": date(year, month, day),
+                    "kickoff_time": datetime(
+                        year, month, day, time[0], time[1], tzinfo=self.JST
+                    ),
+                    "home_team": item[10].replace("\u3000", ""),
+                    "away_team": item[12].replace("\u3000", ""),
+                    "studium": item[8],
+                }
                 schedule_list.append(tmp)
 
         return schedule_list

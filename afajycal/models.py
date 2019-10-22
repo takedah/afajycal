@@ -28,14 +28,14 @@ class MatchSchedule:
     """
 
     def __init__(self, **kwargs):
-        self.number = kwargs['number']
-        self.category = kwargs['category']
-        self.match_number = kwargs['match_number']
-        self.match_date = kwargs['match_date']
-        self.kickoff_time = self.get_datetime(kwargs['kickoff_time'])
-        self.home_team = kwargs['home_team']
-        self.away_team = kwargs['away_team']
-        self.studium = kwargs['studium']
+        self.number = kwargs["number"]
+        self.category = kwargs["category"]
+        self.match_number = kwargs["match_number"]
+        self.match_date = kwargs["match_date"]
+        self.kickoff_time = self.get_datetime(kwargs["kickoff_time"])
+        self.home_team = kwargs["home_team"]
+        self.away_team = kwargs["away_team"]
+        self.studium = kwargs["studium"]
 
     @staticmethod
     def get_datetime(datetime_str):
@@ -55,10 +55,8 @@ class MatchSchedule:
 
         """
         base_datetime = datetime_str[:19]
-        time_difference = datetime_str[-6:].replace(':', '')
-        return datetime.strptime(
-            base_datetime + time_difference,
-            '%Y-%m-%d %H:%M:%S%z')
+        time_difference = datetime_str[-6:].replace(":", "")
+        return datetime.strptime(base_datetime + time_difference, "%Y-%m-%d %H:%M:%S%z")
 
     def kickoff(self):
         """
@@ -70,7 +68,7 @@ class MatchSchedule:
             キックオフ日時の文字列。
 
         """
-        return self.kickoff_time.strftime('%Y/%m/%d %a %H:%M')
+        return self.kickoff_time.strftime("%Y/%m/%d %a %H:%M")
 
     def google_calendar_link(self):
         """
@@ -82,20 +80,27 @@ class MatchSchedule:
             googleカレンダー追加用URL。
 
         """
-        title = self.category + ' (' + self.home_team + ' vs ' \
-            + self.away_team + ')'
+        title = self.category + " (" + self.home_team + " vs " + self.away_team + ")"
         start_date = self.kickoff_time.astimezone(timezone.utc)
-        if self.category == 'サテライト':
+        if self.category == "サテライト":
             game_time = 60
         else:
             game_time = 90
 
         end_date = start_date + timedelta(minutes=game_time)
-        start_date_str = start_date.strftime('%Y%m%dT%H%M%SZ')
-        end_date_str = end_date.strftime('%Y%m%dT%H%M%SZ')
-        link = 'https://www.google.com/calendar/event?' \
-            + 'action=' + 'TEMPLATE' \
-            + '&text=' + urllib.parse.quote(title) \
-            + '&location=' + urllib.parse.quote(self.studium) \
-            + '&dates=' + start_date_str + '/' + end_date_str
+        start_date_str = start_date.strftime("%Y%m%dT%H%M%SZ")
+        end_date_str = end_date.strftime("%Y%m%dT%H%M%SZ")
+        link = (
+            "https://www.google.com/calendar/event?"
+            + "action="
+            + "TEMPLATE"
+            + "&text="
+            + urllib.parse.quote(title)
+            + "&location="
+            + urllib.parse.quote(self.studium)
+            + "&dates="
+            + start_date_str
+            + "/"
+            + end_date_str
+        )
         return link

@@ -16,6 +16,7 @@ class MatchScheduleAction:
     旭川地区サッカー協会第3種事業委員会Webサイトから試合スケジュールを取得する。
 
     """
+
     @classmethod
     def create(self):
         """
@@ -33,33 +34,35 @@ class MatchScheduleAction:
         cur = db.cursor()
         scraper = Scraper()
         try:
-            cur.execute('DELETE FROM match_schedules')
+            cur.execute("DELETE FROM match_schedules")
             values = list()
-            now_time = datetime.now(timezone(timedelta(hours=+9), 'JST'))
+            now_time = datetime.now(timezone(timedelta(hours=+9), "JST"))
             match_list = scraper.get_schedule_list()
             for row in match_list:
                 tmp = list()
                 tmp = [
-                    row['number'],
-                    row['category'],
-                    row['match_number'],
-                    row['match_date'],
-                    row['kickoff_time'],
-                    row['home_team'],
-                    row['away_team'],
-                    row['studium'],
-                    now_time]
+                    row["number"],
+                    row["category"],
+                    row["match_number"],
+                    row["match_date"],
+                    row["kickoff_time"],
+                    row["home_team"],
+                    row["away_team"],
+                    row["studium"],
+                    now_time,
+                ]
                 values.append(tmp)
 
             cur.executemany(
-                'INSERT OR IGNORE INTO match_schedules ('
-                + 'number, category, match_number, match_date, '
-                + 'kickoff_time, home_team, away_team, studium, '
-                + 'updated) VALUES (?,?,?,?,?,?,?,?,?);',
-                values)
+                "INSERT OR IGNORE INTO match_schedules ("
+                + "number, category, match_number, match_date, "
+                + "kickoff_time, home_team, away_team, studium, "
+                + "updated) VALUES (?,?,?,?,?,?,?,?,?);",
+                values,
+            )
             db.commit()
             db.close()
-            print('schedules data imported successfully.')
+            print("schedules data imported successfully.")
             return True
 
         except sqlite3.Error:
@@ -88,10 +91,10 @@ class MatchScheduleAction:
             away_team_rows = cur.fetchall()
             db.close()
             for row in home_team_rows:
-                team_names.append(row['home_team'])
+                team_names.append(row["home_team"])
 
             for row in away_team_rows:
-                team_names.append(row['away_team'])
+                team_names.append(row["away_team"])
 
             team_names = list(filter(lambda a: a != "", team_names))
             team_names = sorted(set(team_names), key=team_names.index)
@@ -126,9 +129,12 @@ class MatchScheduleAction:
         try:
             cur.execute(
                 "SELECT COUNT(*) FROM match_schedules"
-                + " " + "WHERE (home_team=? OR away_team=?)"
-                + " " + "AND kickoff_time > ?",
-                (team_name, team_name, date_time))
+                + " "
+                + "WHERE (home_team=? OR away_team=?)"
+                + " "
+                + "AND kickoff_time > ?",
+                (team_name, team_name, date_time),
+            )
             row = cur.fetchone()
             db.close()
             number_of_matches = row[0]
@@ -157,7 +163,7 @@ class MatchScheduleAction:
             rows = cur.fetchall()
             db.close()
             for r in rows:
-                categories.append(r['category'])
+                categories.append(r["category"])
 
             # remove empty elements.
             categories = list(filter(lambda a: a != "", categories))
@@ -187,14 +193,14 @@ class MatchScheduleAction:
 
         """
         team_name = team_name.strip()
-        if re.search(r'^旭川市立', team_name):
-            team_name = team_name.replace('旭川市立', '')
+        if re.search(r"^旭川市立", team_name):
+            team_name = team_name.replace("旭川市立", "")
 
-        if re.search(r'学校$', team_name):
-            team_name = team_name.replace('学校', '')
+        if re.search(r"学校$", team_name):
+            team_name = team_name.replace("学校", "")
 
-        if re.search(r'中$', team_name):
-            team_name = team_name.replace('中', '')
+        if re.search(r"中$", team_name):
+            team_name = team_name.replace("中", "")
 
         trimed_team_name = team_name.strip()
         return trimed_team_name
@@ -227,34 +233,44 @@ class MatchScheduleAction:
         number = 0
         try:
             team_name = self._trim_team_name(team_name)
-            if team_name == '' or team_name == '全て':
-                team_name = '%'
+            if team_name == "" or team_name == "全て":
+                team_name = "%"
             else:
-                team_name = '%' + team_name + '%'
+                team_name = "%" + team_name + "%"
 
-            if category == '' or category == '全て':
-                category = '%'
+            if category == "" or category == "全て":
+                category = "%"
             else:
-                category = '%' + category + '%'
+                category = "%" + category + "%"
 
-            search_condition = "WHERE" + " " \
-                + "(home_team LIKE ? OR away_team LIKE ?)" \
-                + " " + "AND category LIKE ?" \
-                + " " + "AND kickoff_time > ?"
+            search_condition = (
+                "WHERE"
+                + " "
+                + "(home_team LIKE ? OR away_team LIKE ?)"
+                + " "
+                + "AND category LIKE ?"
+                + " "
+                + "AND kickoff_time > ?"
+            )
             search_value = (team_name, team_name, category, date_time)
             cur.execute(
-                "SELECT" + " "
+                "SELECT"
+                + " "
                 + "id,number,category,match_number,match_date,kickoff_time,"
-                + "home_team,away_team,studium,updated" + " "
-                + "FROM match_schedules" + " "
-                + search_condition + " "
+                + "home_team,away_team,studium,updated"
+                + " "
+                + "FROM match_schedules"
+                + " "
+                + search_condition
+                + " "
                 + "ORDER BY kickoff_time;",
-                search_value)
+                search_value,
+            )
             rows = cur.fetchall()
             cur.execute(
-                "SELECT COUNT(*) FROM match_schedules"
-                + " " + search_condition + ";",
-                search_value)
+                "SELECT COUNT(*) FROM match_schedules" + " " + search_condition + ";",
+                search_value,
+            )
             row = cur.fetchone()
             db.close()
             number = row[0]
@@ -293,18 +309,23 @@ class MatchScheduleAction:
             search_condition = "WHERE match_date = ?"
             search_value = (target_date,)
             cur.execute(
-                "SELECT" + " "
+                "SELECT"
+                + " "
                 + "id,number,category,match_number,match_date,kickoff_time,"
-                + "home_team,away_team,studium,updated" + " "
-                + "FROM match_schedules" + " "
-                + search_condition + " "
+                + "home_team,away_team,studium,updated"
+                + " "
+                + "FROM match_schedules"
+                + " "
+                + search_condition
+                + " "
                 + "ORDER BY kickoff_time;",
-                search_value)
+                search_value,
+            )
             rows = cur.fetchall()
             cur.execute(
-                "SELECT COUNT(*) FROM match_schedules"
-                + " " + search_condition + ";",
-                search_value)
+                "SELECT COUNT(*) FROM match_schedules" + " " + search_condition + ";",
+                search_value,
+            )
             row = cur.fetchone()
             db.close()
             number = row[0]
@@ -331,16 +352,14 @@ class MatchScheduleAction:
         db = DB(Config.DATABASE)
         cur = db.cursor()
         try:
-            cur.execute(
-                "SELECT max(updated),updated FROM match_schedules;"
-            )
+            cur.execute("SELECT max(updated),updated FROM match_schedules;")
             row = cur.fetchone()
             db.close()
             if row[0] is None:
-                return ''
+                return ""
             else:
                 last_update = MatchSchedule.get_datetime(row[0])
-                return datetime.strftime(last_update, '%Y/%m/%d %H:%M JST')
+                return datetime.strftime(last_update, "%Y/%m/%d %H:%M JST")
 
         except sqlite3.Error:
             db.close()

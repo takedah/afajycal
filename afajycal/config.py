@@ -1,4 +1,4 @@
-class Config():
-    AOSC_URL = 'http://afa11.com/asahijy/heisei31/nittei2019.html'
+class Config:
+    AFA_URL = "http://afa11.com/asahijy/heisei31/nittei2019.html"
     THIS_YEAR = 2019
-    DATABASE = 'afajycal/afajycal.db'
+    DATABASE = "afajycal/afajycal.db"
