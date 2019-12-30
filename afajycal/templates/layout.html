@@ -1,69 +1,70 @@
 <!doctype html>
 <html lang="ja">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <title>{{ title }}</title>
-  </head>
-  <body>
-    <header>
-      <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
-        <div class="navbar-nav">
-          <a class="navbar-brand text-white-50" href="/" title="Back to home">AFA junior youth match schedules {{ this_year }}⚽</a> 
-        </div>
-        <div class="navbar-nav mr-2">
-          <div class="dropdown show">
-            <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              チーム名
-            </a>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <title>{{ title }}</title>
+    </head>
+    <body>
+        <header>
+            <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+                <div class="navbar-nav">
+                    <a class="navbar-brand text-white-50" href="/" title="Back to home">AFA Junior Youth Calendar {{ this_year }}⚽</a> 
+                </div>
+                <div class="navbar-nav mr-2">
+                    <div class="dropdown show">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            チーム名
+                        </a>
 
-            <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-              {% for row in team_names_and_match_number %}
-              <a class="dropdown-item" href="./find?team_name={{ row[0] }}&category=">{{ row[1] }} ({{ row[2]}})</a>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
-        <div class="navbar-nav mr-auto">
-          <div class="dropdown show">
-            <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              カテゴリ
-            </a>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                            {% for row in teams %}
+                            <a class="dropdown-item" href="./find?team_name={{ row }}&category=">{{ row }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="navbar-nav mr-auto">
+                    <div class="dropdown show">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            カテゴリ
+                        </a>
 
-            <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-              {% for row in categories %}
-              <a class="dropdown-item" href="./find?team_name=&category={{ row[0] }}">{{ row[1] }}</a>
-              {% endfor %}
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                            {% for row in categories %}
+                            <a class="dropdown-item" href="./find?team_name=&category={{ row }}">{{ row }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="navbar-nav">
+                    <form class="form-inline" action="./find" method="GET">
+                        <div>
+                            <input class="form-control mr-sm-2" type="text" name="team_name" value="" placeholder="チーム名を入力">
+                            <select class="form-control mr-sm-2" name="category">
+                                {% for row in categories %}
+                                <option value="{{ row }}">{{ row }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-primary my-2 my-sm-0">検索</button>
+                        </div>
+                    </form>
+                </div>
+            </nav>
+        </header>
+        <main>
+            {% block content %}
+            <!-- contents -->
+            {% endblock %}
+        </main>
+        <footer class="footer mt-auto">
+            <div class="container">
+                <p>このWebサイトは旭川地区サッカー協会第3種委員会Webサイトからダウンロードしたデータを参考に構成されています。正確な情報は必ず<a href="http://afa11.com/asahijy/" title="旭川地区サッカー協会第3種事業委員会">公式Webサイト</a>を確認してください。</p>
             </div>
-          </div>
-        </div>
-        <div class="navbar-nav">
-          <form class="form-inline" action="./find" method="GET">
-            <div>
-              <input class="form-control mr-sm-2" type="text" name="team_name" value="" placeholder="チーム名を入力">
-              <select class="form-control mr-sm-2" name="category">
-                <option selected>カテゴリを選択</option>
-                {% for row in categories %}
-                <option value="{{ row[1] }}">{{ row[1] }}</option>
-                {% endfor %}
-              </select>
-              <button type="submit" class="btn btn-primary my-2 my-sm-0">検索</button>
-            </div>
-          </form>
-        </div>
-      </nav>
-    </header>
-    {% block content %}
-    <!-- contents -->
-    {% endblock %}
-    <footer class="footer mt-auto">
-      <div class="container">
-        <p>このWebサイトは旭川地区サッカー協会第3種委員会Webサイトからダウンロードしたデータを参考に構成されています。正確な情報は必ず<a href="http://afa11.com/asahijy/" title="旭川地区サッカー協会第3種事業委員会">公式Webサイト</a>を確認してください。</p>
-      </div>
-    </footer>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-  </body>
+        </footer>
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    </body>
 </html>

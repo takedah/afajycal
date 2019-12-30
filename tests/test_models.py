@@ -1,43 +1,103 @@
 import unittest
-from afajycal.models import MatchSchedule
+import urllib.parse
+from datetime import date, datetime, timedelta, timezone
+from unittest import mock
+from afajycal.models import Schedule, ScheduleFactory
 
 
-class TestMatchSchedule(unittest.TestCase):
+JST = timezone(timedelta(hours=+9), "JST")
+
+
+class TestSchedule(unittest.TestCase):
     def setUp(self):
-        self.schedule = MatchSchedule(
-            **{
-                "number": 480,
-                "category": "サテライト",
-                "match_number": "ST61",
-                "match_date": "2019-06-02",
-                "kickoff_time": "2019-06-02 14:00:00+09:00",
-                "home_team": "六合",
-                "away_team": "中富良野",
-                "studium": "花咲球技場",
-            }
+        args = {
+            "number": 480,
+            "category": "サテライト",
+            "match_number": "ST61",
+            "match_date": date(2019, 6, 2),
+            "kickoff_time": datetime(2019, 6, 2, 14, 0, tzinfo=JST),
+            "home_team": "六合",
+            "away_team": "中富良野",
+            "studium": "花咲球技場",
+        }
+        self.schedule = Schedule(**args)
+
+    def test_number(self):
+        self.assertEqual(self.schedule.number, 480)
+
+    def test_category(self):
+        self.assertEqual(self.schedule.category, "サテライト")
+
+    def test_match_number(self):
+        self.assertEqual(self.schedule.match_number, "ST61")
+
+    def test_match_date(self):
+        self.assertEqual(self.schedule.match_date, date(2019, 6, 2))
+
+    def test_kickoff_time(self):
+        self.assertEqual(
+            self.schedule.kickoff_time, datetime(2019, 6, 2, 14, 0, tzinfo=JST)
         )
 
-    def test_kickoff(self):
-        expect = "2019/06/02 Sun 14:00"
-        result = self.schedule.kickoff()
-        self.assertEqual(result, expect)
+    def test_home_team(self):
+        self.assertEqual(self.schedule.home_team, "六合")
+
+    def test_away_team(self):
+        self.assertEqual(self.schedule.away_team, "中富良野")
+
+    def test_studium(self):
+        self.assertEqual(self.schedule.studium, "花咲球技場")
 
     def test_google_calendar_link(self):
-        expect = (
+        link_str = (
             "https://www.google.com/calendar/event?"
-            + "action=TEMPLATE"
+            + "action="
+            + "TEMPLATE"
             + "&text="
-            + "%E3%82%B5%E3%83%86%E3%83%A9%E3%82%A4%E3%83%88%20%28%E5%85%AD%"
-            + "E5%90%88%20vs%20%E4%B8%AD%E5%AF%8C%E8%89%AF%E9%87%8E%29"
+            + urllib.parse.quote("サテライト (六合 vs 中富良野)")
             + "&location="
-            + "%E8%8A%B1%E5%92%B2%E7%90%83%E6%8A%80%E5%A0%B4"
+            + urllib.parse.quote("花咲球技場")
             + "&dates="
             + "20190602T050000Z"
             + "/"
             + "20190602T060000Z"
         )
-        result = self.schedule.google_calendar_link()
-        self.assertEqual(result, expect)
+        self.assertEqual(self.schedule.google_calendar_link, link_str)
+
+
+class TestScheduleFactory(unittest.TestCase):
+    def test_create(self):
+        data_list = [
+            {
+                "number": 480,
+                "category": "サテライト",
+                "match_number": "ST61",
+                "match_date": date(2019, 6, 2),
+                "kickoff_time": datetime(2019, 6, 2, 14, 0, tzinfo=JST),
+                "home_team": "六合",
+                "away_team": "中富良野",
+                "studium": "花咲球技場",
+            },
+            {
+                "number": 469,
+                "category": "サテライト",
+                "match_number": "ST50",
+                "match_date": date(2019, 6, 8),
+                "kickoff_time": datetime(2019, 6, 8, 14, 0, tzinfo=JST),
+                "home_team": "永山南",
+                "away_team": "六合",
+                "studium": "花咲球技場",
+            },
+        ]
+        obj = mock.MagicMock(match_data=data_list)
+        factory = ScheduleFactory()
+        # Scheduleクラスのオブジェクトが生成できるか確認する。
+        for data in obj.match_data:
+            schedule = factory.create(data)
+            self.assertTrue(isinstance(schedule, Schedule))
+        # 要素にScheduleクラスのオブジェクトのリストが格納されているか確認する。
+        for schedule in factory.schedules:
+            self.assertTrue(isinstance(schedule, Schedule))
 
 
 if __name__ == "__main__":

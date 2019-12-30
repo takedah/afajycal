@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS match_schedules;
-CREATE TABLE match_schedules(
+DROP TABLE IF EXISTS schedules;
+CREATE TABLE schedules(
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   number BIGINT UNIQUE NOT NULL,
   category VARCHAR(16),

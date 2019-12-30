@@ -1,83 +1,80 @@
 import urllib.parse
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta, timezone
+from abc import ABCMeta, abstractmethod
 
 
-class MatchSchedule:
-    """
-    試合スケジュールを表す。
+class Schedule:
+    """試合スケジュールを表すハッシュから試合データオブジェクトを作成する。
 
-    Attributes
-    ----------
-    number : int
-        試合番号。
-    category : str
-        試合カテゴリ。
-    match_number : str
-        試合カテゴリごとの連番。
-    match_date : date
-        試合日。
-    kickoff_time : datetime
-        試合開始日時。
-    home_team : str
-        ホームチーム名。
-    away_team : str
-        アウェイチーム名。
-    studium : str
-        試合会場。
+    Attributes:
+        number (str): 連番。
+        category (str): 試合カテゴリ。
+        match_number (str): 試合番号。
+        kickoff_time (datetime.date): 試合開始時刻。
+        home_team (str): ホームチーム。
+        away_team (str): アウェイチーム。
+        studium (str): 試合会場。
+        google_calendar_link (str): 試合スケジュールをGoogleカレンダーへ追加するリンク。
 
     """
 
     def __init__(self, **kwargs):
-        self.number = kwargs["number"]
-        self.category = kwargs["category"]
-        self.match_number = kwargs["match_number"]
-        self.match_date = kwargs["match_date"]
-        self.kickoff_time = self.get_datetime(kwargs["kickoff_time"])
-        self.home_team = kwargs["home_team"]
-        self.away_team = kwargs["away_team"]
-        self.studium = kwargs["studium"]
-
-    @staticmethod
-    def get_datetime(datetime_str):
         """
-        SQLite3が返す文字列の日時をdatetimeオブジェクトに変換する。
-
-        Parameters
-        ----------
-        datetime_str : str
-            SQLite3が返す文字列の日時。
-            %Y-%m-%d %H:%M:%S + 時差
-
-        Returns
-        -------
-        datetime_object : datetime
-            datetimeオブジェクト。
+        Args:
+            **kwargs: 試合スケジュールを表すハッシュ。
 
         """
-        base_datetime = datetime_str[:19]
-        time_difference = datetime_str[-6:].replace(":", "")
-        return datetime.strptime(base_datetime + time_difference, "%Y-%m-%d %H:%M:%S%z")
+        self.__number = kwargs["number"]
+        self.__category = kwargs["category"]
+        self.__match_number = kwargs["match_number"]
+        self.__match_date = kwargs["match_date"]
+        self.__kickoff_time = kwargs["kickoff_time"]
+        self.__home_team = kwargs["home_team"]
+        self.__away_team = kwargs["away_team"]
+        self.__studium = kwargs["studium"]
+        self.__google_calendar_link = self._make_google_calendar_link()
 
-    def kickoff(self):
-        """
-        キックオフ日時を文字列に変換して返す。
+    @property
+    def number(self):
+        return self.__number
 
-        Returns
-        -------
-        kickoff_datetime : str
-            キックオフ日時の文字列。
+    @property
+    def category(self):
+        return self.__category
 
-        """
-        return self.kickoff_time.strftime("%Y/%m/%d %a %H:%M")
+    @property
+    def match_number(self):
+        return self.__match_number
 
+    @property
+    def match_date(self):
+        return self.__match_date
+
+    @property
+    def kickoff_time(self):
+        return self.__kickoff_time
+
+    @property
+    def home_team(self):
+        return self.__home_team
+
+    @property
+    def away_team(self):
+        return self.__away_team
+
+    @property
+    def studium(self):
+        return self.__studium
+
+    @property
     def google_calendar_link(self):
-        """
-        試合スケジュールをgoogleカレンダーに追加できるURLを生成する。
+        return self.__google_calendar_link
 
-        Returns
-        -------
-        link : str
-            googleカレンダー追加用URL。
+    def _make_google_calendar_link(self):
+        """googleカレンダーに追加できるURLを生成する。
+
+        Returns:
+            str: googleカレンダー追加用URL。
 
         """
         title = self.category + " (" + self.home_team + " vs " + self.away_team + ")"
@@ -86,11 +83,8 @@ class MatchSchedule:
             game_time = 60
         else:
             game_time = 90
-
         end_date = start_date + timedelta(minutes=game_time)
-        start_date_str = start_date.strftime("%Y%m%dT%H%M%SZ")
-        end_date_str = end_date.strftime("%Y%m%dT%H%M%SZ")
-        link = (
+        return (
             "https://www.google.com/calendar/event?"
             + "action="
             + "TEMPLATE"
@@ -99,8 +93,61 @@ class MatchSchedule:
             + "&location="
             + urllib.parse.quote(self.studium)
             + "&dates="
-            + start_date_str
+            + start_date.strftime("%Y%m%dT%H%M%SZ")
             + "/"
-            + end_date_str
+            + end_date.strftime("%Y%m%dT%H%M%SZ")
         )
-        return link
+
+
+class Factory(metaclass=ABCMeta):
+    @abstractmethod
+    def _create_schedule(self, match_data):
+        pass
+
+    @abstractmethod
+    def _register_schedule(self, schedule):
+        pass
+
+    def create(self, match_data):
+        schedule = self._create_schedule(match_data)
+        self._register_schedule(schedule)
+        return schedule
+
+
+class ScheduleFactory(Factory):
+    """Scheduleクラスの配列を生成
+
+    試合スケジュールを表すハッシュのリストからScheduleクラスの配列を生成する。
+
+    Attributes:
+        schedules (:obj:`list` of :obj:`Schedule`): Scheduleクラスのオブジェクトのリスト。
+
+    """
+
+    def __init__(self):
+        self.__schedules = list()
+
+    @property
+    def schedules(self):
+        return self.__schedules
+
+    def _create_schedule(self, match_data):
+        """Scheduleオブジェクトの生成
+
+        Args:
+            match_data (dict): 試合スケジュールを表す辞書データ
+
+        Returns:
+            schedule (:obj:`Schedule`): Scheduleクラスのオブジェクト。
+
+        """
+        return Schedule(**match_data)
+
+    def _register_schedule(self, schedule):
+        """Scheduleオブジェクトをリストへ追加
+
+        Args:
+            schedule (:obj:`Schedule`): Scheduleクラスのオブジェクト。
+
+        """
+        self.__schedules.append(schedule)
