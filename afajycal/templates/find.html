@@ -29,7 +29,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for row in calendar.schedules %}
+                        {% for row in schedules %}
                         <tr>
                             <td>{{ row.category }}</td>
                             <td>{{ row.kickoff_time.strftime('%Y/%m/%d %a %H:%M') }}</td>

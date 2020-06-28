@@ -1,87 +1,78 @@
 import sqlite3
-from datetime import datetime
 
 
 class DB:
-    """SQLite3の操作で使うメソッドをラップするためのクラス。
+    """SQLite3データベースの操作を行う。
+
+    Attributes:
+        conn (:obj:`sqlite3.connect`): SQLite3接続クラス。
+
     """
 
     def __init__(self, db_name):
         """
         Args:
-            db_name (str): 接続するSQLite3データベース名。
+            db_name (str): SQLite3データベースファイル名。
 
         """
-
-        self.__conn = sqlite3.connect(db_name)
+        self.__conn = sqlite3.connect(
+            db_name, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
+        )
+        sqlite3.dbapi2.converters["DATETIME"] = sqlite3.dbapi2.converters["TIMESTAMP"]
+        sqlite3.dbapi2.converters["DATE"] = sqlite3.dbapi2.converters["DATE"]
         self.__conn.row_factory = self._dict_factory
-
-    def cursor(self):
-        """
-        Returns:
-            cursor (:obj:`sqlite3.Cursor`): カーソルオブジェクト。
-
-        """
-
-        return self.__conn.cursor()
-
-    def commit(self):
-        """
-        Returns:
-            none: トランザクションをコミットする。
-
-        """
-        return self.__conn.commit()
-
-    def close(self):
-        """
-        Returns:
-            none: SQLite3データベースとの接続を閉じる。
-
-        """
-
-        return self.__conn.close()
-
-    @staticmethod
-    def get_datetime(datetime_str):
-        """SQLite3が返す文字列の日時をdatetime.datetimeオブジェクトに変換する。
-
-        Args:
-            datetime_str (str): SQLite3が返す文字列の日時。
-
-        Returns:
-            datetime_object (:obj:`datetime.datetime`): datetimeオブジェクト。
-
-        """
-        return datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S%z")
-
-    @staticmethod
-    def get_date(date_str):
-        """SQLite3が返す文字列の日をdatetime.dateオブジェクトに変換する。
-
-        Args:
-            date_str (str): SQLite3が返す文字列の日。
-
-        Returns:
-            date_object (:obj:`datetime.date`): dateオブジェクト。
-
-        """
-        return datetime.strptime(date_str, "%Y-%m-%d").date()
+        self.__cursor = self.__conn.cursor()
 
     @staticmethod
     def _dict_factory(cursor, row):
-        """SQLite3の検索結果を辞書へ変換する。
-
-        Args:
-            cursor (:obj:`sqlite3.Cursor`): Cursorオブジェクト。
-            row (list): 値のリスト。
-
-        Returns:
-            d (dict): カラム名をキーとして結果を値に格納した辞書。
-
+        """クエリの結果を辞書で受け取れるようにする。
         """
 
         d = {}
         for idx, col in enumerate(cursor.description):
             d[col[0]] = row[idx]
         return d
+
+    def execute(self, sql, parameters=None):
+        """sqlite3.cursorオブジェクトのexecuteメソッドのラッパー。
+
+        Args:
+            sql (str): SQL文
+            parameters (tuple): SQLにプレースホルダを使用する場合の値を格納したリスト
+
+        """
+        if parameters:
+            self.__cursor.execute(sql, parameters)
+        else:
+            self.__cursor.execute(sql)
+        return True
+
+    def fetchone(self):
+        """sqlite3.cursorオブジェクトのfetchoneメソッドのラッパー。
+
+        Returns:
+            results (:obj:`sqlite3.Cursor`): 検索結果のイテレータ
+
+        """
+        return self.__cursor.fetchone()
+
+    def fetchall(self):
+        """sqlite3.cursorオブジェクトのfetchallメソッドのラッパー。
+
+        Returns:
+            results (:obj:`sqlite3.Cursor`): 検索結果のイテレータ
+
+        """
+        return self.__cursor.fetchall()
+
+    def commit(self):
+        """SQLite3データベースにクエリをコミットする。
+        """
+        self.__conn.commit()
+        return True
+
+    def close(self):
+        """SQLite3データベースへの接続を閉じる。
+        """
+        self.__conn.close()
+        return True

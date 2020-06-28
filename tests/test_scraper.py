@@ -1,8 +1,14 @@
 import unittest
-from unittest.mock import Mock, patch
-from requests import Timeout, HTTPError
 from datetime import date, datetime, timedelta, timezone
-from afajycal.scraper import DownloadedHTML, HTMLDownloadError, ScrapedData
+from requests import Timeout, HTTPError
+from unittest.mock import Mock, patch
+from afajycal.scraper import (
+    DownloadedHTML,
+    DownloadedExcel,
+    HTMLDownloadError,
+    ScrapedHTMLData,
+    ScrapedExcelData,
+)
 
 
 JST = timezone(timedelta(hours=+9), "JST")
@@ -13,19 +19,26 @@ def html_content():
         <table border="1">
         <tbody>
         <tr>
-        <td>No.</td><td></td><td></td><td>M.No.</td>
-        <td>節</td><td>月</td><td>日</td><td>G</td>
-        <td>会場</td><td>KO</td><td>HOME</td><td></td>
+        <td></td>
+        <td>M.No.</td>
+        <td>節</td>
+        <td>月</td>
+        <td>日</td>
+        <td>C</td>
+        <td>G</td>
+        <td>会場</td>
+        <td>KO</td>
+        <td>HOME</td>
+        <td></td>
         <td>AWAY</td>
         </tr>
         <tr>
-        <td align="right">480</td>
-        <td>サテライト</td>
-        <td>サテライト</td>
+        <td>480</td>
         <td>ST61</td>
         <td align="right"></td>
         <td align="right">6</td>
         <td align="right">2</td>
+        <td>サテライト</td>
         <td></td>
         <td>花咲球技場</td>
         <td>14:00</td>
@@ -34,13 +47,12 @@ def html_content():
         <td>中富良野</td>
         </tr>
         <tr>
-        <td align="right">469</td>
-        <td>サテライト</td>
-        <td>サテライト</td>
+        <td>469</td>
         <td>ST50</td>
         <td align="right"></td>
         <td align="right">6</td>
         <td align="right">8</td>
+        <td>サテライト</td>
         <td></td>
         <td>花咲球技場</td>
         <td>14:00</td>
@@ -61,11 +73,45 @@ def html_content():
         <td></td>
         <td></td>
         <td></td>
-        <td></td>
         </tr>
         </tbody>
         </table>
     """
+
+
+def excel_content():
+    return [
+        [
+            "M66",
+            "AC38",
+            "3",
+            "8",
+            "9",
+            "D1",
+            "B",
+            "東光スポーツ公園A",
+            "",
+            "六　合",
+            "vs",
+            "留　萌",
+            "82",
+        ],
+        [
+            "M84",
+            "AC56",
+            "7",
+            "10",
+            "",
+            "D1",
+            "B",
+            "東光スポーツ公園A",
+            "15:30:00",
+            "六　合",
+            "vs",
+            "TRAUM2nd",
+            "104",
+        ],
+    ]
 
 
 class TestDownloadedHTML(unittest.TestCase):
@@ -80,29 +126,38 @@ class TestDownloadedHTML(unittest.TestCase):
         mock_requests.get.return_value = Mock(
             status_code=200, content=self.html_content
         )
-        schedule_html = DownloadedHTML()
+        schedule_html = DownloadedHTML("http://dummy.local")
         result = schedule_html.content
         expect = self.html_content
         self.assertEqual(result, expect)
 
         mock_requests.get.side_effect = Timeout("Dummy Error.")
         with self.assertRaises(HTMLDownloadError):
-            DownloadedHTML()
+            DownloadedHTML("http://dummy.local")
 
         mock_requests.get.side_effect = HTTPError("Dummy Error.")
         with self.assertRaises(HTMLDownloadError):
-            DownloadedHTML()
+            DownloadedHTML("http://dummy.local")
 
         mock_requests.get.side_effect = ConnectionError("Dummy Error.")
         with self.assertRaises(HTMLDownloadError):
-            DownloadedHTML()
+            DownloadedHTML("http://dummy.local")
 
         mock_requests.get.return_value = Mock(status_code=404)
         with self.assertRaises(HTMLDownloadError):
-            DownloadedHTML()
+            DownloadedHTML("http://dummy.local")
 
 
-class TestScrapedData(unittest.TestCase):
+class TestDownloadedExcel(unittest.TestCase):
+    def test_lists(self):
+        schedule_excel = DownloadedExcel("tests/nittei2020_test.xlsx")
+        result = schedule_excel.lists
+        expect = excel_content()
+        self.assertEqual(result[0], expect[0])
+        self.assertEqual(result[1], expect[1])
+
+
+class TestScrapedHTMLData(unittest.TestCase):
     def setUp(self):
         self.html_content = html_content()
 
@@ -114,31 +169,31 @@ class TestScrapedData(unittest.TestCase):
         mock_requests.get.return_value = Mock(
             status_code=200, content=self.html_content
         )
-        downloaded_html = DownloadedHTML()
-        scraper = ScrapedData(downloaded_html)
+        downloaded_html = DownloadedHTML("http://dummy.local")
+        scraper = ScrapedHTMLData(downloaded_html)
         expect = [
             {
-                "number": 480,
+                "serial_number": "480",
                 "category": "サテライト",
                 "match_number": "ST61",
-                "match_date": date(2019, 6, 2),
-                "kickoff_time": datetime(2019, 6, 2, 14, 0, tzinfo=JST),
+                "match_date": date(2020, 6, 2),
+                "kickoff_time": datetime(2020, 6, 2, 14, 0),
                 "home_team": "六合",
                 "away_team": "中富良野",
                 "studium": "花咲球技場",
             },
             {
-                "number": 469,
+                "serial_number": "469",
                 "category": "サテライト",
                 "match_number": "ST50",
-                "match_date": date(2019, 6, 8),
-                "kickoff_time": datetime(2019, 6, 8, 14, 0, tzinfo=JST),
+                "match_date": date(2020, 6, 8),
+                "kickoff_time": datetime(2020, 6, 8, 14, 0),
                 "home_team": "永山南",
                 "away_team": "六合",
                 "studium": "花咲球技場",
             },
         ]
-        self.assertEqual(scraper.match_data, expect)
+        self.assertEqual(scraper.schedule_data, expect)
 
         # 想定外のテーブル要素があった場合は空リストを返す。
         dummy_table = """
@@ -151,6 +206,30 @@ class TestScrapedData(unittest.TestCase):
         </table>
         """
         mock_requests.get.return_value = Mock(status_code=200, content=dummy_table)
-        downloaded_html = DownloadedHTML()
-        scraper = ScrapedData(downloaded_html)
-        self.assertEqual(scraper.match_data, [])
+        downloaded_html = DownloadedHTML("http://dummy.local")
+        scraper = ScrapedHTMLData(downloaded_html)
+        self.assertEqual(scraper.schedule_data, [])
+
+
+class TestScrapedExcelData(unittest.TestCase):
+    def setUp(self):
+        self.downloaded_excel = DownloadedExcel("tests/nittei2020_test.xlsx")
+
+    def tearDown(self):
+        pass
+
+    def test_data_list(self):
+        scraper = ScrapedExcelData(self.downloaded_excel)
+        expect = [
+            {
+                "serial_number": "M66",
+                "category": "D1",
+                "match_number": "AC38",
+                "match_date": date(2020, 8, 9),
+                "kickoff_time": datetime(2020, 8, 9, 0, 0),
+                "home_team": "六合",
+                "away_team": "留萌",
+                "studium": "東光スポーツ公園A",
+            }
+        ]
+        self.assertEqual(scraper.schedule_data, expect)

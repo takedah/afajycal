@@ -1,15 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from flask import Flask, render_template, escape, request, g
 from afajycal.config import Config
 from afajycal.db import DB
-from afajycal.calendar import Calendar
-from afajycal.schedule_finder import ScheduleFinder
-from afajycal.schedule_service import ScheduleService
+from afajycal.models import ScheduleService
 
 
 app = Flask(__name__)
 THIS_YEAR = Config.THIS_YEAR
-JST = Config.JST
 
 
 @app.after_request
@@ -36,25 +33,6 @@ def get_db():
     return g.sqlite_db
 
 
-def all_teams():
-    schedule_service = ScheduleService(get_db())
-    all_teams = schedule_service.get_all_teams()
-    return all_teams
-
-
-def all_categories():
-    schedule_service = ScheduleService(get_db())
-    all_categories = schedule_service.get_all_categories()
-    return ["全てのカテゴリ"] + all_categories
-
-
-def last_update():
-    schedule_service = ScheduleService(get_db())
-    last_update = schedule_service.get_last_updated()
-
-    return last_update.strftime("%Y/%m/%d %H:%M JST")
-
-
 @app.teardown_appcontext
 def close_db(error):
     if hasattr(g, "sqlite_db"):
@@ -63,21 +41,24 @@ def close_db(error):
 
 @app.route("/")
 def index():
-    date_now = datetime.now(JST).date()
-    schedule_finder = ScheduleFinder(get_db())
-    schedule_finder.find({"match_date": date_now})
-    calendar = Calendar(schedule_finder)
+    JST = timezone(timedelta(hours=+9), "JST")
+    date_now = datetime.now(JST)
+    date_now = date_now.replace(tzinfo=None)
+    schedule_service = ScheduleService(get_db())
+    today_schedules = schedule_service.find(match_date=date_now.date())
+    all_teams = schedule_service.get_all_teams()
+    all_categories = [""] + schedule_service.get_all_categories()
     title = "AFA Junior Youth Calendar"
     return render_template(
         "index.html",
         title=title,
         this_year=THIS_YEAR,
-        teams=all_teams(),
-        categories=all_categories(),
-        date_now=date_now.strftime("%Y-%m-%d %a"),
-        calendar=calendar,
-        results_number=len(calendar.schedules),
-        last_update=last_update(),
+        teams=all_teams,
+        categories=all_categories,
+        date_now=date_now.date().strftime("%Y-%m-%d %a"),
+        schedules=today_schedules,
+        results_number=len(today_schedules),
+        last_update=schedule_service.get_last_updated().strftime("%Y/%m/%d %H:%M"),
     )
 
 
@@ -85,18 +66,19 @@ def index():
 def find():
     team_name = request.args.get("team_name", None)
     category = request.args.get("category", None)
-    if team_name == "" or team_name is None:
+    if team_name == "":
         team_name = None
     else:
         team_name = escape(team_name)
-    if category == "全てのカテゴリ" or category == "" or category is None:
+    if category == "":
         category = None
     else:
         category = escape(category)
-    schedule_finder = ScheduleFinder(get_db()).find(
-        {"team_name": team_name, "category": category}
-    )
-    calendar = Calendar(schedule_finder)
+
+    schedule_service = ScheduleService(get_db())
+    found_schedules = schedule_service.find(team_name=team_name, category=category)
+    all_teams = schedule_service.get_all_teams()
+    all_categories = [""] + schedule_service.get_all_categories()
     if team_name is None:
         team_name = "全チーム"
     if category is None:
@@ -104,26 +86,29 @@ def find():
     title = (
         '"' + "チーム: " + team_name + " " + "カテゴリ: " + category + '"' + " " + "の試合検索結果"
     )
+
     return render_template(
         "find.html",
         title=title,
         this_year=THIS_YEAR,
-        teams=all_teams(),
-        categories=all_categories(),
+        teams=all_teams,
+        categories=all_categories,
         team_name=team_name,
         category=category,
-        calendar=calendar,
-        results_number=len(calendar.schedules),
-        last_update=last_update(),
+        schedules=found_schedules,
+        results_number=len(found_schedules),
+        last_update=schedule_service.get_last_updated().strftime("%Y/%m/%d %H:%M"),
     )
 
 
 @app.errorhandler(404)
 def not_found(error):
-    schedule_finder = ScheduleFinder(get_db())
+    schedule_service = ScheduleService(get_db())
+    all_teams = schedule_service.get_all_teams()
+    all_categories = [""] + schedule_service.get_all_categories()
     title = "404 Page Not Found."
     return render_template(
-        "404.html", title=title, teams=all_teams(), categories=all_categories()
+        "404.html", title=title, teams=all_teams, categories=all_categories
     )
 
 

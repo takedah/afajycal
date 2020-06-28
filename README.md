@@ -20,19 +20,15 @@ FlaskとSQLite3を使っています。
 
 ```bash
 $ make
-$ python
->>> from afajycal.action import MatchScheduleAction
-  >>> MatchScheduleAction.create()
->>> quit()
   ```
 
 ## Usage
 
   ```bash
-  $ FLASK_APP=afajycal/view.py flask run
+  $ FLASK_APP=afajycal/views.py flask run
   ```
 
 ## Lisence
 
-  Copyright (c) 2019 Hiroki Takeda
+  Copyright (c) 2020 Hiroki Takeda
   [MIT](http://opensource.org/licenses/mit-license.php)

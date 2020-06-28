@@ -38,19 +38,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="navbar-nav">
-                    <form class="form-inline" action="./find" method="GET">
-                        <div>
-                            <input class="form-control mr-sm-2" type="text" name="team_name" value="" placeholder="チーム名を入力">
-                            <select class="form-control mr-sm-2" name="category">
-                                {% for row in categories %}
-                                <option value="{{ row }}">{{ row }}</option>
-                                {% endfor %}
-                            </select>
-                            <button type="submit" class="btn btn-primary my-2 my-sm-0">検索</button>
-                        </div>
-                    </form>
-                </div>
             </nav>
         </header>
         <main>
