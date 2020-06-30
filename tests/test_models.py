@@ -104,7 +104,7 @@ class TestScheduleService(unittest.TestCase):
 
     def test_find(self):
         found_schedules = self.service.find(team_name="旭川市立六合中学校", category="サテライト")
-        result = found_schedules[1]
+        result = found_schedules[0]
         self.assertEqual(result.category, "サテライト")
         self.assertEqual(result.away_team, "中富良野")
         self.assertEqual(result.studium, "花咲球技場")

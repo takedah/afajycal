@@ -299,7 +299,7 @@ class ScheduleService:
             + " "
             + search_condition
             + " "
-            + "ORDER BY kickoff_time DESC;",
+            + "ORDER BY kickoff_time ASC;",
             search_values,
         )
         factory = ScheduleFactory()

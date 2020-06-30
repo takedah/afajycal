@@ -1,73 +1,74 @@
 {% extends 'layout.html' %}
 {% block content %}
 <div class="container mb-5">
-    <div class="row">
-        <div class="col-md-3">
-            <div class="list-group">
-                {% for row in teams %}
-                <a class="list-group-item list-group-item-action" href="./find?team_name={{ row }}&category=">{{ row }}</a>
-                {% endfor %}
-            </div>
-        </div>
-        <div class="col-md-9">
-            <h1 class="h3">{{ team_name }} の試合日程 ({{ category }})</h1>
-            {% if 0 < results_number %}
-            <section>
-                <p class="alert alert-success my-3">{{ results_number }} 件の試合日程が見つかりました。</p>
-            </section>
-            <section>
-                <table class="table table-striped table-bordered table-hover">
-                    <caption class="text-right">最終更新日: {{ last_update }}</caption>
-                    <thead>
-                        <tr>
-                            <th>カテゴリ</th>
-                            <th>キックオフ</th>
-                            <th>ホーム</th>
-                            <th>アウェイ</th>
-                            <th>会場</th>
-                            <th>Google Calendar</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in schedules %}
-                        <tr>
-                            <td>{{ row.category }}</td>
-                            <td>{{ row.kickoff_time.strftime('%Y/%m/%d %a %H:%M') }}</td>
-                            <td>{{ row.home_team }}</td>
-                            <td>{{ row.away_team }}</td>
-                            <td>{{ row.studium }}</td>
-                            <td><a href="{{ row.google_calendar_link }}" title="googleカレンダーに登録">カレンダーに登録</a></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </section>
-            {% else %}
-            <section>
-                <p class="alert alert-danger my-3">試合日程は見つかりませんでした...</p>
-            </section>
-            <section>
-                <h2 class="h3">条件を変えて試合日程を検索</h2>
-                <form class="form mb-5" action="./find" method="GET">
-                    <div class="form-group">
-                        <label class="h5 text-secondary" for="team_name">チーム名を入力</label>
-                        <input class="form-control form-control-lg" type="text" name="team_name" value="" placeholder="例）六合">
-                    </div>
-                    <div class="form-group">
-                        <label class="h5 text-secondary" for="category">カテゴリを選択</label>
-                        <select class="form-control form-control-lg" name="category">
-                            {% for row in categories %}
-                            <option value="{{ row }}">{{ row }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-lg btn-primary btn-block">検索</button>
-                    </div>
-                </form>
-            </section>
-            {% endif %} 
-        </div>
+  <div class="row">
+    <div class="col-md-9">
+      <h1 class="h3">{{ team_name }} の試合日程 ({{ category }})</h1>
+      {% if 0 < results_number %}
+      <section>
+        <p class="alert alert-success my-3">{{ results_number }} 件の試合日程が見つかりました。</p>
+        <p class="alert alert-warning">キックオフ時間が不明な試合日程については暫定で0時0分と表示していますのでご注意ください。</p>
+      </section>
+      <section>
+        <table class="table table-striped table-bordered table-hover">
+          <caption class="text-right">最終更新日: {{ last_update }}</caption>
+          <thead>
+            <tr>
+              <th>カテゴリ</th>
+              <th>キックオフ</th>
+              <th>ホーム</th>
+              <th>アウェイ</th>
+              <th>会場</th>
+              <th>Google Calendar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in schedules %}
+            <tr>
+              <td>{{ row.category }}</td>
+              <td>{{ row.kickoff_time.strftime('%Y/%m/%d %a %H:%M') }}</td>
+              <td>{{ row.home_team }}</td>
+              <td>{{ row.away_team }}</td>
+              <td>{{ row.studium }}</td>
+              <td><a href="{{ row.google_calendar_link }}" title="googleカレンダーに登録">カレンダーに登録</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+      {% else %}
+      <section>
+        <p class="alert alert-danger my-3">試合日程は見つかりませんでした...</p>
+      </section>
+      <section>
+        <h2 class="h3">条件を変えて試合日程を検索</h2>
+        <form class="form mb-5" action="./find" method="GET">
+          <div class="form-group">
+            <label class="h5 text-secondary" for="team_name">チーム名を入力</label>
+            <input class="form-control form-control-lg" type="text" name="team_name" value="" placeholder="例）六合">
+          </div>
+          <div class="form-group">
+            <label class="h5 text-secondary" for="category">カテゴリを選択</label>
+            <select class="form-control form-control-lg" name="category">
+              {% for row in categories %}
+              <option value="{{ row }}">{{ row }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn btn-lg btn-primary btn-block">検索</button>
+          </div>
+        </form>
+      </section>
+      {% endif %} 
     </div>
+    <div class="col-md-3">
+      <div class="list-group">
+        {% for row in teams %}
+        <a class="list-group-item list-group-item-action" href="./find?team_name={{ row }}&category=">{{ row }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
