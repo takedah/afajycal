@@ -43,7 +43,6 @@ def close_db(error):
 def index():
     JST = timezone(timedelta(hours=+9), "JST")
     date_now = datetime.now(JST)
-    date_now = date_now.replace(tzinfo=None)
     schedule_service = ScheduleService(get_db())
     today_schedules = schedule_service.find(match_date=date_now.date())
     all_teams = schedule_service.get_all_teams()
