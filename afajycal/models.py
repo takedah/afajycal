@@ -1,7 +1,8 @@
 import re
-import sqlite3
 import urllib.parse
 from datetime import datetime, timedelta, timezone
+from afajycal.config import Config
+from afajycal.db import DatabaseError, DataError
 from afajycal.factory import Factory
 from afajycal.logs import DBLog
 
@@ -82,7 +83,7 @@ class Schedule:
         """
         title = self.category + " (" + self.home_team + " vs " + self.away_team + ")"
         start_date = self.kickoff_time.astimezone(timezone.utc)
-        if self.category == "サテライト":
+        if self.category == "ST":
             game_time = 60
         else:
             game_time = 90
@@ -155,6 +156,7 @@ class ScheduleService:
 
         self.__db = db
         self.__table_name = "schedules"
+        self.__JST = Config.JST
         self.__logger = DBLog()
 
     def truncate(self):
@@ -184,28 +186,35 @@ class ScheduleService:
             "home_team",
             "away_team",
             "studium",
+            "updated_at",
         ]
 
         column_names = ""
         place_holders = ""
+        upsert = ""
         for item in items:
             column_names += "," + item
-            place_holders += ",?"
+            place_holders += ",%s"
+            upsert += "," + item + "=%s"
 
         state = (
-            "INSERT OR REPLACE INTO"
+            "INSERT INTO"
             + " "
             + self.__table_name
             + " "
             + "("
             + column_names[1:]
-            + ",updated_at"
             + ")"
             + " "
             + "VALUES ("
             + place_holders[1:]
-            + ",datetime('now', '+9 hours')"
-            + ");"
+            + ")"
+            + " "
+            + "ON CONFLICT(serial_number)"
+            + " "
+            + "DO UPDATE SET"
+            + " "
+            + upsert[1:]
         )
 
         values = [
@@ -217,15 +226,15 @@ class ScheduleService:
             schedule.home_team,
             schedule.away_team,
             schedule.studium,
+            datetime.now(timezone(timedelta(hours=+9))),
         ]
-
+        # UPDATE句用にリストを重複させる。
+        values += values
         try:
             self.__db.execute(state, values)
             return True
-        except sqlite3.Error as e:
-            self.__logger.error_log(
-                self.__table_name, schedule.serial_number, e.args[0]
-            )
+        except (DatabaseError, DataError) as e:
+            self.__logger.error_log(e.args[0])
             return False
 
     @staticmethod
@@ -279,13 +288,13 @@ class ScheduleService:
         search_condition = (
             "WHERE"
             + " "
-            + "(home_team LIKE ? OR away_team LIKE ?)"
+            + "(home_team LIKE %s OR away_team LIKE %s)"
             + " "
-            + "AND category LIKE ?"
+            + "AND category LIKE %s"
         )
         search_values = [team_name, team_name, category]
         if match_date is not None:
-            search_condition += " " + "AND match_date = ?"
+            search_condition += " " + "AND match_date = %s"
             search_values.append(match_date)
         self.__db.execute(
             "SELECT"
@@ -338,7 +347,8 @@ class ScheduleService:
         self.__db.execute("SELECT DISTINCT category FROM " + self.__table_name + ";")
         for row in self.__db.fetchall():
             categories.append(row["category"])
-        return list(filter(lambda a: a != "", categories))
+        categories = list(filter(lambda a: a != "", categories))
+        return sorted(set(categories))
 
     def get_last_updated(self):
         """テーブルの最終更新日を返す。
@@ -346,11 +356,9 @@ class ScheduleService:
         Returns:
             last_updated (:obj:`datetime.datetime'): scheduleテーブルのupdatedカラムで一番最新の値を返す。
         """
-        self.__db.execute(
-            "SELECT max(updated_at),updated_at FROM " + self.__table_name + ";"
-        )
+        self.__db.execute("SELECT max(updated_at) FROM " + self.__table_name + ";")
         row = self.__db.fetchone()
-        if row["max(updated_at)"] is None:
+        if row["max"] is None:
             return None
         else:
-            return datetime.strptime(row["max(updated_at)"], "%Y-%m-%d %H:%M:%S")
+            return row["max"]

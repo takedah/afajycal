@@ -28,15 +28,15 @@ def connect_db():
 
 
 def get_db():
-    if not hasattr(g, "sqlite_db"):
-        g.sqlite_db = connect_db()
-    return g.sqlite_db
+    if not hasattr(g, "postgres_db"):
+        g.postgres_db = connect_db()
+    return g.postgres_db
 
 
 @app.teardown_appcontext
 def close_db(error):
-    if hasattr(g, "sqlite_db"):
-        g.sqlite_db.close()
+    if hasattr(g, "postgres_db"):
+        g.postgres_db.close()
 
 
 @app.route("/")

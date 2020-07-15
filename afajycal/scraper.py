@@ -200,6 +200,7 @@ class ScrapedHTMLData(ScrapedData):
          """
         self.__downloaded_html = downloaded_html
         self.__this_year = Config.THIS_YEAR
+        self.__JST = Config.JST
         self.__schedule_data = list()
         for row in self._get_table_values():
             if self._extract_schedule_data(row):
@@ -226,7 +227,7 @@ class ScrapedHTMLData(ScrapedData):
                     if td.string is None:
                         val = ""
                     else:
-                        val = td.string
+                        val = td.string.strip()
                     row.append(val)
                 table_values.append(row)
         return table_values
@@ -273,7 +274,9 @@ class ScrapedHTMLData(ScrapedData):
             "category": row[5],
             "match_number": row[1],
             "match_date": date(year, month, day),
-            "kickoff_time": datetime(year, month, day, time[0], time[1]),
+            "kickoff_time": datetime(
+                year, month, day, time[0], time[1], tzinfo=self.__JST
+            ),
             "home_team": row[9].replace("\u3000", ""),
             "away_team": row[11].replace("\u3000", ""),
             "studium": row[7],
@@ -299,6 +302,7 @@ class ScrapedExcelData(ScrapedData):
 
          """
         self.__this_year = Config.THIS_YEAR
+        self.__JST = Config.JST
         self.__schedule_data = list()
         for row in downloaded_excel.lists:
             if self._extract_schedule_data(row):
@@ -334,7 +338,9 @@ class ScrapedExcelData(ScrapedData):
             "category": row[5],
             "match_number": row[1],
             "match_date": date(year, month, day),
-            "kickoff_time": datetime(year, month, day, time[0], time[1]),
+            "kickoff_time": datetime(
+                year, month, day, time[0], time[1], tzinfo=self.__JST
+            ),
             "home_team": row[9].replace("\u3000", ""),
             "away_team": row[11].replace("\u3000", ""),
             "studium": row[7],

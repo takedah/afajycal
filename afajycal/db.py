@@ -1,78 +1,88 @@
-import sqlite3
+import psycopg2
+from psycopg2.extras import DictCursor
+
+
+class DatabaseError(Exception):
+    pass
+
+
+class DataError(Exception):
+    pass
 
 
 class DB:
-    """SQLite3データベースの操作を行う。
+    """PostgreSQLデータベースの操作を行う。
 
     Attributes:
-        conn (:obj:`sqlite3.connect`): SQLite3接続クラス。
+        conn (:obj:`sqlite3.connect`): PostgreSQL接続クラス。
 
     """
 
-    def __init__(self, db_name):
+    def __init__(self, dsn):
         """
         Args:
-            db_name (str): SQLite3データベースファイル名。
+            db_name (str): PostgreSQLデータベースファイル名。
 
         """
-        self.__conn = sqlite3.connect(
-            db_name, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
-        )
-        sqlite3.dbapi2.converters["DATETIME"] = sqlite3.dbapi2.converters["TIMESTAMP"]
-        sqlite3.dbapi2.converters["DATE"] = sqlite3.dbapi2.converters["DATE"]
-        self.__conn.row_factory = self._dict_factory
-        self.__cursor = self.__conn.cursor()
-
-    @staticmethod
-    def _dict_factory(cursor, row):
-        """クエリの結果を辞書で受け取れるようにする。
-        """
-
-        d = {}
-        for idx, col in enumerate(cursor.description):
-            d[col[0]] = row[idx]
-        return d
+        try:
+            self.__conn = psycopg2.connect(dsn)
+            self.__cursor = self.__conn.cursor(cursor_factory=DictCursor)
+        except (psycopg2.DatabaseError, psycopg2.OperationalError) as e:
+            raise DatabaseError(e.args[0])
 
     def execute(self, sql, parameters=None):
-        """sqlite3.cursorオブジェクトのexecuteメソッドのラッパー。
+        """cursorオブジェクトのexecuteメソッドのラッパー。
 
         Args:
             sql (str): SQL文
             parameters (tuple): SQLにプレースホルダを使用する場合の値を格納したリスト
 
         """
-        if parameters:
-            self.__cursor.execute(sql, parameters)
-        else:
-            self.__cursor.execute(sql)
-        return True
+        try:
+            if parameters:
+                self.__cursor.execute(sql, parameters)
+            else:
+                self.__cursor.execute(sql)
+            return True
+        except (
+            psycopg2.DataError,
+            psycopg2.IntegrityError,
+            psycopg2.InternalError,
+        ) as e:
+            raise DataError(e.args[0])
 
     def fetchone(self):
-        """sqlite3.cursorオブジェクトのfetchoneメソッドのラッパー。
+        """cursorオブジェクトのfetchoneメソッドのラッパー。
 
         Returns:
-            results (:obj:`sqlite3.Cursor`): 検索結果のイテレータ
+            results (:obj:`Cursor`): 検索結果のイテレータ
 
         """
         return self.__cursor.fetchone()
 
     def fetchall(self):
-        """sqlite3.cursorオブジェクトのfetchallメソッドのラッパー。
+        """cursorオブジェクトのfetchallメソッドのラッパー。
 
         Returns:
-            results (:obj:`sqlite3.Cursor`): 検索結果のイテレータ
+            results (:obj:`Cursor`): 検索結果のイテレータ
 
         """
         return self.__cursor.fetchall()
 
     def commit(self):
-        """SQLite3データベースにクエリをコミットする。
+        """PostgreSQLデータベースにクエリをコミットする。
         """
         self.__conn.commit()
         return True
 
+    def rollback(self):
+        """PostgreSQLデータベースのクエリをロールバックする。
+        """
+        self.__conn.rollback()
+        return True
+
     def close(self):
-        """SQLite3データベースへの接続を閉じる。
+        """PostgreSQLデータベースへの接続を閉じる。
         """
         self.__conn.close()
         return True

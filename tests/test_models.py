@@ -1,17 +1,19 @@
 import unittest
 import urllib.parse
 from datetime import date, datetime
+from afajycal.config import Config
 from afajycal.db import DB
 from afajycal.models import Schedule, ScheduleFactory, ScheduleService
 
 
+JST = Config.JST
 test_data = [
     {
         "serial_number": 480,
         "category": "サテライト",
         "match_number": "ST61",
         "match_date": date(2019, 6, 2),
-        "kickoff_time": datetime(2019, 6, 2, 14, 0),
+        "kickoff_time": datetime(2019, 6, 2, 14, 0, tzinfo=JST),
         "home_team": "六合",
         "away_team": "中富良野",
         "studium": "花咲球技場",
@@ -21,7 +23,7 @@ test_data = [
         "category": "サテライト",
         "match_number": "ST50",
         "match_date": date(2019, 6, 8),
-        "kickoff_time": datetime(2019, 6, 8, 14, 0),
+        "kickoff_time": datetime(2019, 6, 8, 14, 0, tzinfo=JST),
         "home_team": "永山南",
         "away_team": "六合",
         "studium": "花咲球技場",
@@ -46,7 +48,9 @@ class TestSchedule(unittest.TestCase):
         self.assertEqual(self.schedule.match_date, date(2019, 6, 2))
 
     def test_kickoff_time(self):
-        self.assertEqual(self.schedule.kickoff_time, datetime(2019, 6, 2, 14, 0))
+        self.assertEqual(
+            self.schedule.kickoff_time, datetime(2019, 6, 2, 14, 0, tzinfo=JST)
+        )
 
     def test_home_team(self):
         self.assertEqual(self.schedule.home_team, "六合")
@@ -88,7 +92,7 @@ class TestScheduleService(unittest.TestCase):
         self.factory = ScheduleFactory()
         for d in test_data:
             self.factory.create(d)
-        self.db = DB("tests/afajycal_test.db")
+        self.db = DB(Config.DATABASE)
         self.service = ScheduleService(self.db)
 
     @classmethod
@@ -109,7 +113,7 @@ class TestScheduleService(unittest.TestCase):
         self.assertEqual(result.away_team, "中富良野")
         self.assertEqual(result.studium, "花咲球技場")
         self.assertEqual(result.match_date, date(2019, 6, 2))
-        self.assertEqual(result.kickoff_time, datetime(2019, 6, 2, 14, 0))
+        self.assertEqual(result.kickoff_time, datetime(2019, 6, 2, 14, 0, tzinfo=JST))
         found_schedules = self.service.find(match_date=date(2019, 9, 18))
         self.assertEqual(found_schedules, [])
 

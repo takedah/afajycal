@@ -3,4 +3,6 @@ flask
 gunicorn
 numpy
 pandas
+psycopg2
 requests
+xlrd
