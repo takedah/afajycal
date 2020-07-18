@@ -24,7 +24,7 @@
             {% for row in schedules %}
             <tr>
               <td>{{ row.category }}</td>
-              <td>{{ row.kickoff.strftime('%Y/%m/%d %a %H:%M') }}</td>
+              <td>{{ row.kickoff_time.strftime('%Y/%m/%d %a %H:%M') }}</td>
               <td>{{ row.home_team }}</td>
               <td>{{ row.away_team }}</td>
               <td>{{ row.studium }}</td>
@@ -44,7 +44,7 @@
             <input class="form-control form-control-lg" type="text" name="team_name" value="" placeholder="例）六合">
           </div>
           <div class="form-group">
-            <label class="h5 text-secondary" for="category">カテゴリを選択 *空欄で全カテゴリから検索します*</label>
+            <label class="h5 text-secondary" for="category">カテゴリを選択</label>
             <select class="form-control form-control-lg" name="category">
               {% for row in categories %}
               <option value="{{ row }}">{{ row }}</option>
