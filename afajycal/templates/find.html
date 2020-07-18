@@ -6,7 +6,8 @@
       <h1 class="h3">{{ team_name }} の試合日程 ({{ category }})</h1>
       {% if 0 < results_number %}
       <section>
-        <p class="alert alert-success my-3">{{ results_number }} 件の試合日程が見つかりました。</p>
+         <p class="alert alert-success my-3">{{ results_number }} 件の試合日程が見つかりました。</p>
+        <p class="alert alert-danger">旭川地区サッカー協会第3種委員会Webサイトのデータを元に表示しています（{{ last_update }}更新）。正確な情報は必ず<a class="alert-link" href="http://afa11.com/asahijy/" title="旭川地区サッカー協会第3種事業委員会">公式Webサイト</a>を確認してください。</p>
         <p class="alert alert-warning">キックオフ時間が不明な試合日程については暫定で0時0分と表示していますのでご注意ください。</p>
       </section>
       <section>
