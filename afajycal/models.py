@@ -83,7 +83,7 @@ class Schedule:
         """
         title = self.category + " (" + self.home_team + " vs " + self.away_team + ")"
         start_date = self.kickoff_time.astimezone(timezone.utc)
-        if self.category == "ST":
+        if self.category == "サテライト":
             game_time = 60
         else:
             game_time = 90
@@ -143,9 +143,7 @@ class ScheduleFactory(Factory):
 
 
 class ScheduleService:
-    """試合スケジュールデータを扱う
-
-    """
+    """試合スケジュールデータを扱う"""
 
     def __init__(self, db):
         """
@@ -160,10 +158,9 @@ class ScheduleService:
         self.__logger = DBLog()
 
     def truncate(self):
-        """スケジュールテーブルのデータを全削除
-        """
+        """スケジュールテーブルのデータを全削除"""
 
-        state = "DELETE FROM " + self.__table_name + ";"
+        state = "TRUNCATE TABLE " + self.__table_name + " RESTART IDENTITY;"
         self.__db.execute(state)
 
     def create(self, schedule):
@@ -308,7 +305,7 @@ class ScheduleService:
             + " "
             + search_condition
             + " "
-            + "ORDER BY kickoff_time ASC;",
+            + "ORDER BY kickoff_time DESC;",
             search_values,
         )
         factory = ScheduleFactory()

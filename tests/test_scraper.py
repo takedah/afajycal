@@ -20,11 +20,12 @@ def html_content():
         <tbody>
         <tr>
         <td></td>
+        <td></td>
+        <td>C</td>
         <td>M.No.</td>
         <td>節</td>
         <td>月</td>
         <td>日</td>
-        <td>C</td>
         <td>G</td>
         <td>会場</td>
         <td>KO</td>
@@ -34,11 +35,12 @@ def html_content():
         </tr>
         <tr>
         <td>480</td>
+        <td>サテライト</td>
+        <td>ST</td>
         <td>ST61</td>
         <td align="right"></td>
         <td align="right">6</td>
         <td align="right">2</td>
-        <td>サテライト</td>
         <td></td>
         <td>花咲球技場</td>
         <td>14:00</td>
@@ -48,11 +50,12 @@ def html_content():
         </tr>
         <tr>
         <td>469</td>
+        <td>サテライト</td>
+        <td>ST</td>
         <td>ST50</td>
         <td align="right"></td>
         <td align="right">6</td>
         <td align="right">8</td>
-        <td>サテライト</td>
         <td></td>
         <td>花咲球技場</td>
         <td>14:00</td>

@@ -70,19 +70,16 @@ class DB:
         return self.__cursor.fetchall()
 
     def commit(self):
-        """PostgreSQLデータベースにクエリをコミットする。
-        """
+        """PostgreSQLデータベースにクエリをコミットする。"""
         self.__conn.commit()
         return True
 
     def rollback(self):
-        """PostgreSQLデータベースのクエリをロールバックする。
-        """
+        """PostgreSQLデータベースのクエリをロールバックする。"""
         self.__conn.rollback()
         return True
 
     def close(self):
-        """PostgreSQLデータベースへの接続を閉じる。
-        """
+        """PostgreSQLデータベースへの接続を閉じる。"""
         self.__conn.close()
         return True

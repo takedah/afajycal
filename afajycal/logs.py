@@ -16,8 +16,7 @@ class Log:
 
 
 class DBLog(Log):
-    """データベースのエラーログ用
-    """
+    """データベースのエラーログ用"""
 
     def __init__(self):
         logger = logging.getLogger("DBLog")

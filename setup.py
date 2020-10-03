@@ -8,8 +8,8 @@ with open("LICENSE") as f:
     license = f.read()
 
 setup(
-    name="aoscjycal",
-    version="0.1.0",
+    name="afajycal",
+    version="0.1.1",
     description="Calendar of AFA Junior Youth soccer match schedules",
     long_description=readme,
     author="Hiroki Takeda",
@@ -24,7 +24,7 @@ setup(
         "requests",
         "xlrd",
     ],
-    url="https://github.com/takedah/aoscjycal",
+    url="https://github.com/takedah/afajycal",
     license=license,
     packages=find_packages(exclude=("tests", "docs")),
 )

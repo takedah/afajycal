@@ -39,8 +39,7 @@ class DownloadedHTML:
         return self.__content
 
     def _get_html_content(self):
-        """旭川地区サッカー協会第3種委員会WebサイトからHTMLファイルの文字列データを取得する。
-        """
+        """旭川地区サッカー協会第3種委員会WebサイトからHTMLファイルの文字列データを取得する。"""
         try:
             response = requests.get(self.__afa_url)
         except (ConnectionError, Timeout, HTTPError):
@@ -81,8 +80,7 @@ class DownloadedExcel:
         return self.__afa_url
 
     def _get_worksheet_lists(self):
-        """Excelファイルから二次元配列を抽出
-        """
+        """Excelファイルから二次元配列を抽出"""
 
         df = pd.read_excel(
             self.__afa_url,
@@ -173,7 +171,7 @@ class ScrapedData:
         Returns:
             valid_year (int): 補正後の年。
 
-       """
+        """
         if month < 4:
             return year + 1
         else:
@@ -197,7 +195,7 @@ class ScrapedHTMLData(ScrapedData):
             downloaded_html (:obj:`DownloadedHTML`): ダウンロードした
                 試合スケジュールHTMLを要素に持つオブジェクト。
 
-         """
+        """
         self.__downloaded_html = downloaded_html
         self.__this_year = Config.THIS_YEAR
         self.__JST = Config.JST
@@ -248,11 +246,12 @@ class ScrapedHTMLData(ScrapedData):
         # 見出しの列はスキップ。
         if row == [
             "",
+            "",
+            "C",
             "M.No.",
             "節",
             "月",
             "日",
-            "C",
             "G",
             "会場",
             "KO",
@@ -264,22 +263,25 @@ class ScrapedHTMLData(ScrapedData):
         # 連番のない列もスキップ。
         if row[0] == "":
             return False
+        # 過去データはテーブルの列数が少ないのでスキップ。
+        if not len(row) == 13:
+            return False
 
-        month = self.get_month(row[3])
-        day = self.get_day(row[4])
-        time = self.get_time(row[8])
+        month = self.get_month(row[5])
+        day = self.get_day(row[6])
+        time = self.get_time(row[9])
         year = self.get_valid_year(month, self.__this_year)
         return {
             "serial_number": row[0],
-            "category": row[5],
-            "match_number": row[1],
+            "category": row[1],
+            "match_number": row[3],
             "match_date": date(year, month, day),
             "kickoff_time": datetime(
                 year, month, day, time[0], time[1], tzinfo=self.__JST
             ),
-            "home_team": row[9].replace("\u3000", ""),
-            "away_team": row[11].replace("\u3000", ""),
-            "studium": row[7],
+            "home_team": row[10].replace("\u3000", ""),
+            "away_team": row[12].replace("\u3000", ""),
+            "studium": row[8],
         }
 
 
@@ -300,7 +302,7 @@ class ScrapedExcelData(ScrapedData):
             downloaded_excel (:obj:`DownloadedExcel`): ダウンロードした
                 試合スケジュールExcelデータを要素に持つオブジェクト。
 
-         """
+        """
         self.__this_year = Config.THIS_YEAR
         self.__JST = Config.JST
         self.__schedule_data = list()

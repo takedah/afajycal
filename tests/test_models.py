@@ -20,7 +20,7 @@ test_data = [
     },
     {
         "serial_number": 469,
-        "category": "サテライト",
+        "category": "地区カブス",
         "match_number": "ST50",
         "match_date": date(2019, 6, 8),
         "kickoff_time": datetime(2019, 6, 8, 14, 0, tzinfo=JST),
@@ -87,12 +87,13 @@ class TestScheduleFactory(unittest.TestCase):
 
 
 class TestScheduleService(unittest.TestCase):
+    # 事前に環境変数 AFAJYCAL_TEST_DB_URL をセットしてから実行すること。
     @classmethod
     def setUpClass(self):
         self.factory = ScheduleFactory()
         for d in test_data:
             self.factory.create(d)
-        self.db = DB(Config.DATABASE)
+        self.db = DB(Config.TEST_DATABASE)
         self.service = ScheduleService(self.db)
 
     @classmethod
@@ -122,7 +123,7 @@ class TestScheduleService(unittest.TestCase):
         self.assertEqual(self.service.get_all_teams(), expect)
 
     def test_get_all_categories(self):
-        expect = ["サテライト"]
+        expect = ["サテライト", "地区カブス"]
         self.assertEqual(self.service.get_all_categories(), expect)
 
 
