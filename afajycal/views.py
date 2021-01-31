@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta, timezone
-from flask import Flask, render_template, escape, request, g
+
+from flask import Flask, escape, g, render_template, request
+
 from afajycal.config import Config
 from afajycal.db import DB
-from afajycal.models import ScheduleService
-
+from afajycal.services import ScheduleService
 
 app = Flask(__name__)
 THIS_YEAR = Config.THIS_YEAR
@@ -24,7 +25,7 @@ def add_security_headers(response):
 
 
 def connect_db():
-    return DB(Config.DATABASE)
+    return DB()
 
 
 def get_db():
@@ -41,7 +42,7 @@ def close_db(error):
 
 @app.route("/")
 def index():
-    JST = timezone(timedelta(hours=+9), "JST")
+    JST = Config.JST
     date_now = datetime.now(JST)
     schedule_service = ScheduleService(get_db())
     today_schedules = schedule_service.find(match_date=date_now.date())

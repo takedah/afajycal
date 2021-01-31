@@ -1,15 +1,16 @@
 import unittest
 from datetime import date, datetime, timedelta, timezone
-from requests import Timeout, HTTPError
 from unittest.mock import Mock, patch
-from afajycal.scraper import (
-    DownloadedHTML,
-    DownloadedExcel,
-    HTMLDownloadError,
-    ScrapedHTMLData,
-    ScrapedExcelData,
-)
 
+from requests import HTTPError, Timeout
+
+from afajycal.errors import HTMLDownloadError
+from afajycal.scraper import (
+    DownloadedExcel,
+    DownloadedHTML,
+    ScrapedExcelData,
+    ScrapedHTMLData,
+)
 
 JST = timezone(timedelta(hours=+9), "JST")
 
@@ -98,6 +99,9 @@ def excel_content():
             "vs",
             "留　萌",
             "82",
+            "",
+            "",
+            "",
         ],
         [
             "M84",
@@ -113,6 +117,9 @@ def excel_content():
             "vs",
             "TRAUM2nd",
             "104",
+            "",
+            "",
+            "",
         ],
     ]
 

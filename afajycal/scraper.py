@@ -1,15 +1,16 @@
+import re
+from datetime import date, datetime, timezone
+from typing import Optional
+
 import numpy as np
 import pandas as pd
-import re
 import requests
 from bs4 import BeautifulSoup
-from datetime import date, datetime
-from requests import Timeout, HTTPError
+from requests import HTTPError, Timeout
+
 from afajycal.config import Config
-
-
-class HTMLDownloadError(Exception):
-    pass
+from afajycal.errors import HTMLDownloadError
+from afajycal.logs import AppLog
 
 
 class DownloadedHTML:
@@ -23,30 +24,59 @@ class DownloadedHTML:
 
     """
 
-    def __init__(self, afa_url):
+    def __init__(self, afa_url: str):
         """
         Args:
             afa_url (str): 試合スケジュールWebページのURL
 
         """
-
-        self.__afa_url = afa_url
-        self.__content = ""
-        self._get_html_content()
+        self.__logger = AppLog()
+        self.__content = self._get_html_content(afa_url)
 
     @property
-    def content(self):
+    def content(self) -> bytes:
         return self.__content
 
-    def _get_html_content(self):
-        """旭川地区サッカー協会第3種委員会WebサイトからHTMLファイルの文字列データを取得する。"""
+    def _info_log(self, message: str) -> None:
+        """AppLog.infoのラッパー
+
+        Args:
+            message (str): 通常のログメッセージ
+
+        """
+        self.__logger.info(message)
+
+    def _error_log(self, message: str) -> None:
+        """AppLog.errorのラッパー
+
+        Args:
+            message (str): エラーログメッセージ
+
+        """
+        self.__logger.error(message)
+
+    def _get_html_content(self, afa_url) -> bytes:
+        """旭川地区サッカー協会第3種委員会WebサイトからHTMLファイルのデータを取得
+
+        Args:
+            afa_url (str): HTMLファイルのURL
+
+        Returns:
+            content (bytes): HTMLコンテンツデータ
+
+        """
         try:
-            response = requests.get(self.__afa_url)
+            response = requests.get(afa_url)
+            self._info_log("HTMLファイルのダウンロードに成功しました。")
         except (ConnectionError, Timeout, HTTPError):
-            raise HTMLDownloadError("cannot connect to web server.")
+            message = "cannot connect to web server."
+            self._error_log(message)
+            raise HTMLDownloadError(message)
         if response.status_code != 200:
-            raise HTMLDownloadError("cannot get HTML contents.")
-        self.__content = response.content
+            message = "cannot get HTML contents."
+            self._error_log(message)
+            raise HTMLDownloadError(message)
+        return response.content
 
 
 class DownloadedExcel:
@@ -60,30 +90,30 @@ class DownloadedExcel:
 
     """
 
-    def __init__(self, afa_url):
+    def __init__(self, afa_url: str):
         """
         Args:
             afa_url (str): 試合スケジュール excelファイルのURL
 
         """
-
-        self.__afa_url = afa_url
-        self.__lists = ""
-        self._get_worksheet_lists()
+        self.__lists = self._get_worksheet_lists(afa_url)
 
     @property
-    def lists(self):
+    def lists(self) -> list:
         return self.__lists
 
-    @property
-    def _afa_url(self):
-        return self.__afa_url
+    def _get_worksheet_lists(self, afa_url) -> list:
+        """Excelファイルから二次元配列を抽出
 
-    def _get_worksheet_lists(self):
-        """Excelファイルから二次元配列を抽出"""
+        Args:
+            afa_url (str): ExcelファイルのURL
 
+        Returns:
+            worksheet_lists (list of list): Excelファイルの二次元配列データ
+
+        """
         df = pd.read_excel(
-            self.__afa_url,
+            afa_url,
             sheet_name="日程順",
             header=None,
             index_col=None,
@@ -91,12 +121,31 @@ class DownloadedExcel:
             dtype=str,
         )
         df.replace(np.nan, "", inplace=True)
-        self.__lists = df.values.tolist()
+        return df.values.tolist()
 
 
 class ScrapedData:
+    """Webサイトから取得したデータを格納するモデルの基底クラス
+
+    Attributes:
+        schedule_data (list): 試合スケジュールを表す辞書のリスト
+
+    """
+
+    def __init__(self):
+        self.__this_year = Config.THIS_YEAR
+        self.__JST = Config.JST
+
+    @property
+    def this_year(self) -> int:
+        return self.__this_year
+
+    @property
+    def JST(self) -> timezone:
+        return self.__JST
+
     @staticmethod
-    def get_month(month_str):
+    def get_month(month_str: str) -> int:
         """月を表す文字列を数値に変換する。
 
         Args:
@@ -115,7 +164,7 @@ class ScrapedData:
         return month
 
     @staticmethod
-    def get_day(day_str):
+    def get_day(day_str: str) -> int:
         """日を表す文字列を数値に変換する。
 
         Args:
@@ -134,14 +183,14 @@ class ScrapedData:
         return day
 
     @staticmethod
-    def get_time(time_str):
+    def get_time(time_str: str) -> list:
         """時間・分を表す文字列を数値に変換する。
 
         Args:
             str (str): 時間・分を表す文字列。
 
         Returns:
-            time (list): 時間・分を数値で格納した配列。
+            time (list of int): 時間・分を数値で格納した配列。
 
         Raises:
             ValueError: 時間・分を表すのに適切ではない数値だった場合。
@@ -161,7 +210,7 @@ class ScrapedData:
         return [hour, minute]
 
     @staticmethod
-    def get_valid_year(month, year):
+    def get_valid_year(month: int, year: int) -> int:
         """試合スケジュールの月が1月から3月までの間だった場合、年を1加算して補正する。
 
         Args:
@@ -189,33 +238,35 @@ class ScrapedHTMLData(ScrapedData):
 
     """
 
-    def __init__(self, downloaded_html):
+    def __init__(self, downloaded_html: DownloadedHTML):
         """
         Args:
             downloaded_html (:obj:`DownloadedHTML`): ダウンロードした
-                試合スケジュールHTMLを要素に持つオブジェクト。
+                試合スケジュールHTMLコンテンツデータを要素に持つオブジェクト。
 
         """
-        self.__downloaded_html = downloaded_html
-        self.__this_year = Config.THIS_YEAR
-        self.__JST = Config.JST
+        ScrapedData.__init__(self)
         self.__schedule_data = list()
-        for row in self._get_table_values():
-            if self._extract_schedule_data(row):
+        for row in self._get_table_values(downloaded_html):
+            if not self._extract_schedule_data(row) is None:
                 self.__schedule_data.append(self._extract_schedule_data(row))
 
     @property
-    def schedule_data(self):
+    def schedule_data(self) -> list:
         return self.__schedule_data
 
-    def _get_table_values(self):
+    def _get_table_values(self, downloaded_html: DownloadedHTML) -> list:
         """試合スケジュールHTMLからtableの内容を抽出して二次元配列に格納する。
+
+        Args:
+            downloaded_html (:obj:`DownloadedHTML`): ダウンロードした
+                試合スケジュールHTMLコンテンツデータを要素に持つオブジェクト。
 
         Returns:
             table_values (list of list): tableの内容で構成される二次元配列。
 
         """
-        soup = BeautifulSoup(self.__downloaded_html.content, "html.parser")
+        soup = BeautifulSoup(downloaded_html.content, "html.parser")
         table_values = list()
         for table in soup.find_all("table", attrs={"border": "1"}):
             for tr in table.find_all("tr"):
@@ -230,7 +281,7 @@ class ScrapedHTMLData(ScrapedData):
                 table_values.append(row)
         return table_values
 
-    def _extract_schedule_data(self, row):
+    def _extract_schedule_data(self, row: list) -> Optional[dict]:
         """試合スケジュールデータへの変換
 
         試合スケジュールHTMLのtable要素から抽出した二次元配列の要素となる配列
@@ -240,7 +291,7 @@ class ScrapedHTMLData(ScrapedData):
             row (list): 試合スケジュールの配列
 
         Returns:
-            schedule_data (dict or bool): 試合スケジュールを表すハッシュ
+            schedule_data (dict): 試合スケジュールを表すハッシュ
 
         """
         # 見出しの列はスキップ。
@@ -259,25 +310,25 @@ class ScrapedHTMLData(ScrapedData):
             "",
             "AWAY",
         ]:
-            return False
+            return None
         # 連番のない列もスキップ。
         if row[0] == "":
-            return False
+            return None
         # 過去データはテーブルの列数が少ないのでスキップ。
         if not len(row) == 13:
-            return False
+            return None
 
         month = self.get_month(row[5])
         day = self.get_day(row[6])
         time = self.get_time(row[9])
-        year = self.get_valid_year(month, self.__this_year)
+        year = self.get_valid_year(month, self.this_year)
         return {
             "serial_number": row[0],
             "category": row[1],
             "match_number": row[3],
             "match_date": date(year, month, day),
             "kickoff_time": datetime(
-                year, month, day, time[0], time[1], tzinfo=self.__JST
+                year, month, day, time[0], time[1], tzinfo=self.JST
             ),
             "home_team": row[10].replace("\u3000", ""),
             "away_team": row[12].replace("\u3000", ""),
@@ -296,25 +347,24 @@ class ScrapedExcelData(ScrapedData):
 
     """
 
-    def __init__(self, downloaded_excel):
+    def __init__(self, downloaded_excel: DownloadedExcel):
         """
         Args:
             downloaded_excel (:obj:`DownloadedExcel`): ダウンロードした
                 試合スケジュールExcelデータを要素に持つオブジェクト。
 
         """
-        self.__this_year = Config.THIS_YEAR
-        self.__JST = Config.JST
+        ScrapedData.__init__(self)
         self.__schedule_data = list()
         for row in downloaded_excel.lists:
-            if self._extract_schedule_data(row):
+            if not self._extract_schedule_data(row) is None:
                 self.__schedule_data.append(self._extract_schedule_data(row))
 
     @property
-    def schedule_data(self):
+    def schedule_data(self) -> list:
         return self.__schedule_data
 
-    def _extract_schedule_data(self, row):
+    def _extract_schedule_data(self, row: list) -> Optional[dict]:
         """試合スケジュールデータへの変換
 
         試合スケジュールHTMLのtable要素から抽出した二次元配列の要素となる配列
@@ -324,24 +374,24 @@ class ScrapedExcelData(ScrapedData):
             row (list): 試合スケジュールの配列
 
         Returns:
-            schedule_data (dict or bool): 試合スケジュールを表すハッシュ
+            schedule_data (dict): 試合スケジュールを表すハッシュ
 
         """
         # 連番のない列、日付が入っていない列はスキップ。
         if row[0] == "" or row[3] == "" or row[4] == "":
-            return False
+            return None
 
         month = self.get_month(row[3])
         day = self.get_day(row[4])
         time = self.get_time(row[8])
-        year = self.get_valid_year(month, self.__this_year)
+        year = self.get_valid_year(month, self.this_year)
         return {
             "serial_number": row[0],
             "category": row[5],
             "match_number": row[1],
             "match_date": date(year, month, day),
             "kickoff_time": datetime(
-                year, month, day, time[0], time[1], tzinfo=self.__JST
+                year, month, day, time[0], time[1], tzinfo=self.JST
             ),
             "home_team": row[9].replace("\u3000", ""),
             "away_team": row[11].replace("\u3000", ""),

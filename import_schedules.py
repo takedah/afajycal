@@ -1,25 +1,24 @@
-from afajycal.config import Config
-from afajycal.db import DB, DatabaseError, DataError
-from afajycal.models import ScheduleFactory, ScheduleService
-from afajycal.scraper import (
-    DownloadedHTML,
-    ScrapedHTMLData,
-)
+from afajycal.db import DB
+from afajycal.errors import DatabaseError, DataError
+from afajycal.logs import AppLog
+from afajycal.models import ScheduleFactory
+from afajycal.services import ScheduleService
+from afajycal.scraper import DownloadedHTML, ScrapedHTMLData
 
 
 def import_schedules():
-    """データベースに試合スケジュールを格納
-    """
+    """データベースに試合スケジュールを格納"""
 
     # Webサイトからデータを抽出する処理
     downloaded_html = DownloadedHTML("http://afa11.com/asahijy/reiwa2/nittei2020.html")
     scraped_data = ScrapedHTMLData(downloaded_html)
     schedule_factory = ScheduleFactory()
-    for d in scraped_data.schedule_data:
-        schedule_factory.create(d)
+    for row in scraped_data.schedule_data:
+        schedule_factory.create(**row)
 
     # 抽出データをデータベースへ格納する処理
-    db = DB(Config.DATABASE)
+    db = DB()
+    logger = AppLog()
     try:
         schedule_service = ScheduleService(db)
         for schedule in schedule_factory.items:
@@ -27,7 +26,7 @@ def import_schedules():
         db.commit()
     except (DatabaseError, DataError) as e:
         db.rollback()
-        print(e.args[0])
+        logger.error(e.args[0])
     finally:
         db.close()
 
